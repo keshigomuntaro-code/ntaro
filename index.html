@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>消しゴムんたろう 公式サイト</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <style>
+        :root { --main-blue: #4A90E2; --bg-color: #F9F9F9; --text-color: #333; --accent-pink: #FF6B6B; --sub-blue: #EAF4FF; }
+        body { font-family: "Hiragino Maru Gothic Pro", "Yu Gothic", sans-serif; margin: 0; background-color: var(--bg-color); color: var(--text-color); line-height: 1.8; }
+        header { background-color: #fff; padding: 30px; text-align: center; border-bottom: 5px solid var(--main-blue); }
+        h1 { margin: 0; color: var(--main-blue); font-size: 2.2em; letter-spacing: 2px; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; background: #fff; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
+        
+        /* ヒーローエリア */
+        .hero { background-color: var(--sub-blue); padding: 50px 20px; display: flex; flex-direction: column; align-items: center; border-radius: 15px; margin-bottom: 40px; text-align: center; }
+        .char-img { max-width: 220px; filter: drop-shadow(0 8px 20px rgba(0,0,0,0.15)); margin-bottom: 20px; }
+        
+        /* プロフィール詳細スタイル */
+        .profile-card { background: #fff; border: 2px dashed var(--main-blue); border-radius: 15px; padding: 25px; margin-top: 20px; }
+        .profile-grid { display: grid; grid-template-columns: 100px 1fr; gap: 10px; margin-top: 15px; text-align: left; }
+        .profile-label { font-weight: bold; color: var(--main-blue); background: var(--sub-blue); padding: 2px 10px; border-radius: 5px; font-size: 0.9em; }
+        
+        section { margin-bottom: 60px; }
+        h2.title { background: var(--main-blue); color: #fff; padding: 8px 30px; border-radius: 30px; display: inline-block; font-size: 1.3em; margin-bottom: 20px; }
+
+        /* ゲーム画面 */
+        #game-area { position: relative; width: 100%; margin-bottom: 20px; }
+        #game-container { position: relative; width: 100%; height: 350px; background-color: #fff; border: 2px solid #ddd; border-radius: 15px; overflow: hidden; cursor: crosshair; }
+        #player { position: absolute; bottom: 10px; width: 80px; z-index: 10; pointer-events: none; }
+        .kusu { position: absolute; width: 12px; height: 8px; background: #666; border-radius: 40%; }
+        .game-info { display: flex; justify-content: space-between; font-weight: bold; color: var(--main-blue); margin-bottom: 10px; }
+        .start-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); color:white; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index: 40; }
+        
+        /* ランキング */
+        .ranking-list { background: #f0f7ff; padding: 15px; border-radius: 10px; list-style: none; margin: 0; padding: 0; }
+        .ranking-item { display: flex; justify-content: space-between; padding: 8px 15px; border-bottom: 1px solid #dee7f0; }
+        
+        /* モーダル */
+        .modal { display: none; position: fixed; z-index: 2000; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); }
+        .modal-content { background: #fff; margin: 15% auto; padding: 30px; width: 85%; max-width: 400px; border-radius: 15px; text-align: center; }
+        input[type="text"] { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
+        
+        footer { text-align: center; padding: 40px; font-size: 0.8em; color: #999; border-top: 1px solid #eee; }
+    </style>
+</head>
+<body>
+
+    <header><h1>消しゴムんたろう 公式</h1></header>
+
+    <div class="container">
+        <section class="hero">
+            <img src="image_b322c7.png" alt="消しゴムんたろう" class="char-img">
+            <h2 class="title">プロフィール</h2>
+            <p>「間違えたって大丈夫。僕が全部、受け止めるから。」</p>
+            
+            <div class="profile-card">
+                <div class="profile-grid">
+                    <span class="profile-label">なまえ</span> <span>消しゴムんたろう</span>
+                    <span class="profile-label">しごと</span> <span>みんなの書き間違いを消すこと（特に漢字テスト）</span>
+                    <span class="profile-label">とくぎ</span> <span>身を削って平和を守ること、角で消す快感</span>
+                    <span class="profile-label">なやみ</span> <span>消しカスが散らかること、最近少し背が低くなった</span>
+                    <span class="profile-label">すき</span> <span>算数のノート、新しい筆箱の匂い</span>
+                    <span class="profile-label">ひみつ</span> <span>実は、消せば消すほど記憶が新しくなるらしい</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="game-section">
+            <h2 class="title">ミニゲーム：消しカスキャッチ</h2>
+            <p>降り注ぐ「消しカス」をキャッチして、机をキレイにしよう！</p>
+            <div class="game-info"><div id="timer">残り時間: 60s</div><div id="score-board">スコア: 0</div></div>
+            <div id="game-area">
+                <div id="game-container">
+                    <img src="image_b322c7.png" id="player">
+                    <div id="start-screen" class="start-overlay">
+                        <button onclick="startGame()" style="padding:12px 40px; font-size:1.2em; cursor:pointer; border-radius:50px; border:none; background:var(--main-blue); color:white; font-weight:bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">ゲームスタート</button>
+                    </div>
+                </div>
+            </div>
+            <h3 style="color:var(--main-blue);">🏆 世界ランキング (TOP5)</h3>
+            <div class="ranking-list" id="ranking-display">読み込み中...</div>
+        </section>
+    </div>
+
+    <div id="scoreModal" class="modal">
+        <div class="modal-content">
+            <h2 style="color:var(--accent-pink);">タイムアップ！</h2>
+            <p>あなたの消しゴム力: <span id="final-score" style="font-size:2em; font-weight:bold;">0</span></p>
+            <input type="text" id="rankingName" placeholder="名前(5文字以内)" maxlength="5">
+            <button id="saveScoreBtn" onclick="saveScoreToFirebase()" style="width:100%; padding:12px; background:var(--main-blue); color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">ランキングに名を刻む</button>
+        </div>
+    </div>
+
+    <footer>&copy; 消しゴムんたろうを守る会</footer>
+
+    <script>
+        // 設定情報
+        const firebaseConfig = {
+            apiKey: "AIzaSyBjhqORK7LsHZZWw_aDnVPSA_IstYqBLRw",
+            authDomain: "keshigomuuu-f5183.firebaseapp.com",
+            projectId: "keshigomuuu-f5183",
+            storageBucket: "keshigomuuu-f5183.firebasestorage.app",
+            messagingSenderId: "541731028448",
+            appId: "1:541731028448:web:512938a4ca14e61842bf85",
+            measurementId: "G-8H0QH3TMZN"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // ランキング保存
+        async function saveScoreToFirebase() {
+            const name = document.getElementById('rankingName').value || "ななし";
+            const scoreVal = parseInt(document.getElementById('final-score').innerText);
+            const btn = document.getElementById('saveScoreBtn');
+            btn.disabled = true; btn.innerText = "送信中...";
+            try {
+                await db.collection("ranking").add({ name: name, score: scoreVal, date: new Date() });
+                document.getElementById('scoreModal').style.display = 'none';
+            } catch(e) { alert("エラーが発生しました。ルールの設定を確認してください。"); }
+            btn.disabled = false; btn.innerText = "ランキングに名を刻む";
+        }
+
+        // ランキング読み込み
+        function loadRanking() {
+            db.collection("ranking").orderBy("score", "desc").limit(5).onSnapshot(snapshot => {
+                const display = document.getElementById('ranking-display');
+                display.innerHTML = snapshot.docs.map((doc, i) => `
+                    <div class="ranking-item"><span>${i+1}位: ${doc.data().name}</span><span>${doc.data().score}点</span></div>
+                `).join('') || "まだ記録がありません。";
+            });
+        }
+
+        // --- ゲームエンジン ---
+        const container = document.getElementById('game-container');
+        const player = document.getElementById('player');
+        const scoreBoard = document.getElementById('score-board');
+        const timerDisplay = document.getElementById('timer');
+        let score = 0, gameActive = false, timeLeft = 60;
+        let gameTimer;
+
+        function movePlayer(clientX) {
+            if(!gameActive) return;
+            const rect = container.getBoundingClientRect();
+            let x = clientX - rect.left - (player.offsetWidth / 2);
+            if(x < 0) x = 0; if(x > rect.width - player.offsetWidth) x = rect.width - player.offsetWidth;
+            player.style.left = x + 'px';
+        }
+        container.addEventListener('mousemove', (e) => movePlayer(e.clientX));
+        container.addEventListener('touchmove', (e) => { e.preventDefault(); movePlayer(e.touches[0].clientX); }, {passive: false});
+
+        function startGame() {
+            gameActive = true; score = 0; timeLeft = 60;
+            scoreBoard.innerText = `スコア: ${score}`;
+            document.getElementById('start-screen').style.display = 'none';
+            spawnKusu();
+            gameTimer = setInterval(() => {
+                timeLeft--; timerDisplay.innerText = `残り時間: ${timeLeft}s`;
+                if(timeLeft <= 0) endGame();
+            }, 1000);
+        }
+        function endGame() {
+            gameActive = false; clearInterval(gameTimer);
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('scoreModal').style.display = 'block';
+            document.getElementById('start-screen').style.display = 'flex';
+        }
+        function spawnKusu() {
+            if(!gameActive) return;
+            const kusu = document.createElement('div');
+            kusu.className = 'kusu';
+            kusu.style.left = Math.random() * (container.offsetWidth - 15) + 'px';
+            kusu.style.top = '0px';
+            container.appendChild(kusu);
+            let fall = setInterval(() => {
+                let top = parseInt(kusu.style.top);
+                kusu.style.top = (top + 5) + 'px';
+                if (checkCollision(player, kusu)) {
+                    score++; scoreBoard.innerText = `スコア: ${score}`;
+                    kusu.remove(); clearInterval(fall);
+                }
+                if (top > container.offsetHeight || !gameActive) { kusu.remove(); clearInterval(fall); }
+            }, 20);
+            setTimeout(spawnKusu, 500);
+        }
+        function checkCollision(a, b) {
+            const aR = a.getBoundingClientRect(), bR = b.getBoundingClientRect();
+            return !(aR.top > bR.bottom || aR.bottom < bR.top || aR.left > bR.right || aR.right < bR.left);
+        }
+
+        loadRanking();
+    </script>
+</body>
+</html>
