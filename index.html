@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>消しゴムんたろう 公式サイト | 進化版</title>
+    <title>消しゴムんたろう 公式サイト | 完全版</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     
@@ -14,30 +14,26 @@
         h1 { margin: 0; color: var(--main-blue); font-size: 2.5em; text-shadow: 2px 2px 0px #fff; }
         .container { max-width: 800px; margin: 0 auto; padding: 20px; background: #fff; }
         
-        /* ヒーローエリア */
-        .hero { background-color: var(--sub-blue); padding: 30px; border-radius: 20px; margin-bottom: 40px; text-align: center; position: relative; }
+        .hero { background-color: var(--sub-blue); padding: 30px; border-radius: 20px; margin-bottom: 40px; text-align: center; }
         .char-img { max-width: 180px; filter: drop-shadow(0 8px 15px rgba(0,0,0,0.1)); transition: 0.3s; cursor: pointer; }
         .char-img:active { transform: scale(1.1); }
 
-        /* ゲームエリア（青基調に修正） */
+        /* ゲームエリア（青基調） */
         #game-section { background: var(--main-blue); color: #fff; padding: 20px; border-radius: 20px; position: relative; box-shadow: 0 10px 20px rgba(74, 144, 226, 0.3); }
         #game-container { position: relative; width: 100%; height: 400px; background-color: var(--sub-blue); border: 4px solid #fff; border-radius: 10px; overflow: hidden; touch-action: none; }
         #player { position: absolute; bottom: 10px; width: 60px; z-index: 10; pointer-events: none; }
-        .kusu { position: absolute; font-size: 20px; }
+        .kusu { position: absolute; font-size: 24px; }
         .fever-mode { animation: fever-bg 0.5s infinite; }
         @keyframes fever-bg { 0% { background: var(--sub-blue); } 50% { background: #fff176; } 100% { background: var(--sub-blue); } }
         
-        /* UIパーツ */
         .btn { padding: 12px 30px; font-weight: bold; border-radius: 50px; border: none; cursor: pointer; transition: 0.2s; }
-        .btn-main { background: #fff; color: var(--main-blue); box-shadow: 0 4px 0 var(--sub-blue); }
-        .btn-main:active { transform: translateY(2px); box-shadow: none; }
+        .btn-main { background: #fff; color: var(--main-blue); box-shadow: 0 4px 0 #ddd; }
         #fever-gauge-container { width: 100%; height: 12px; background: rgba(255,255,255,0.3); border-radius: 6px; margin: 10px 0; overflow: hidden; border: 1px solid #fff; }
         #fever-bar { width: 0%; height: 100%; background: var(--fever-gold); transition: 0.1s; }
 
         /* ランキング */
         .ranking-list { background: #fff; border-radius: 15px; border: 2px solid var(--sub-blue); overflow: hidden; color: #333; }
         .ranking-item { display: flex; justify-content: space-between; padding: 12px 20px; border-bottom: 1px solid #eee; }
-        .ranking-item:first-child { background: #fff9c4; font-weight: bold; }
         .new-label { background: var(--accent-pink); color: #fff; font-size: 0.7em; padding: 2px 6px; border-radius: 4px; margin-left: 8px; }
 
         .modal { display: none; position: fixed; z-index: 3000; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); }
@@ -53,11 +49,11 @@
 
     <div class="container">
         <section class="hero">
-            <img src="image_b322c7.png" alt="消しゴムんたろう" class="char-img" id="click-ntaro">
+            <img src="image_b322c7.png" alt="消しゴムんたろう" class="char-img" id="hero-click-ntaro">
             <p><strong>上の「消しゴムんたろう」をタップしてみよう！</strong></p>
             <div style="text-align: left; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background: #fff;">
                 <h3 style="margin-top:0; color:var(--main-blue);">✨ 消しゴムんたろうの秘密エピソード</h3>
-                <p>実は消しゴムんたろう、昔は「修正ペン」に憧れていました。でも、自分の身を削ってでも「やり直せるチャンス」を残せる今の仕事に誇りを持っています。好きな音楽は「ゴシゴシ」という摩擦音です。</p>
+                <p>消しゴムんたろうは、みんなが一生懸命書いた文字を消す時、いつも「次はもっと上手く書けるよ！」と応援しています。消しカスは、頑張った努力の結晶なんだって！</p>
             </div>
         </section>
 
@@ -79,7 +75,7 @@
         </section>
 
         <section style="margin-top:40px;">
-            <h2 style="background:var(--main-blue); color:#fff; padding:8px 20px; border-radius:30px; display:inline-block; font-size:1.2em;">🏆 世界ランキング (最新スコア優先)</h2>
+            <h2 style="background:var(--main-blue); color:#fff; padding:8px 20px; border-radius:30px; display:inline-block; font-size:1.2em;">🏆 最新ランキング (新しい順)</h2>
             <div class="ranking-list" id="ranking-display">読み込み中...</div>
         </section>
     </div>
@@ -87,7 +83,7 @@
     <div id="scoreModal" class="modal">
         <div class="modal-content">
             <h2 style="color:var(--main-blue);">終了！</h2>
-            <p>あなたの記録: <span id="final-score" style="font-size:2em; font-weight:bold;">0</span></p>
+            <p>記録: <span id="final-score" style="font-size:2em; font-weight:bold;">0</span></p>
             <input type="text" id="rankingName" placeholder="名前(5文字)" maxlength="5" style="width:100%; padding:10px; margin-bottom:15px; border-radius:8px; border:1px solid #ddd;">
             <button class="btn" style="background:var(--main-blue); color:#fff; width:100%;" id="saveScoreBtn" onclick="saveScoreToFirebase()">ランキングに登録</button>
         </div>
@@ -112,9 +108,7 @@
         const ngWords = ["死ね", "殺す", "うんこ", "ちんこ", "まんこ"]; 
         function filterName(name) {
             let clean = name;
-            ngWords.forEach(word => {
-                if(clean.includes(word)) clean = "きれいな心";
-            });
+            ngWords.forEach(word => { if(clean.includes(word)) clean = "きれいな心"; });
             return clean;
         }
 
@@ -127,21 +121,24 @@
             try {
                 await db.collection("ranking").add({ name: name, score: scoreVal, date: firebase.firestore.FieldValue.serverTimestamp() });
                 document.getElementById('scoreModal').style.display = 'none';
-            } catch(e) { console.error(e); }
+            } catch(e) { console.error(e); alert("エラー！Firebaseの「ルール」を確認してね。"); }
             btn.disabled = false;
         }
 
+        // ランキング読み込み (エラー回避のためdateのみでソート)
         function loadRanking() {
-            db.collection("ranking").orderBy("score", "desc").orderBy("date", "desc").limit(10).onSnapshot(snapshot => {
+            db.collection("ranking").orderBy("date", "desc").limit(10).onSnapshot(snapshot => {
                 const display = document.getElementById('ranking-display');
                 display.innerHTML = snapshot.docs.map((doc, i) => {
                     const data = doc.data();
                     const isNew = data.date && (Date.now() - data.date.toMillis() < 300000);
                     return `<div class="ranking-item">
-                        <span>${i+1}位: ${data.name}${isNew ? '<span class="new-label">NEW</span>' : ''}</span>
+                        <span>${i+1}: ${data.name}${isNew ? '<span class="new-label">NEW</span>' : ''}</span>
                         <span>${data.score}点</span>
                     </div>`;
                 }).join('') || "まだ記録がありません。";
+            }, err => {
+                document.getElementById('ranking-display').innerText = "エラー：Firebaseの設定を確認してください。";
             });
         }
 
@@ -150,8 +147,8 @@
         const feverBar = document.getElementById('fever-bar');
         let score = 0, gameActive = false, timeLeft = 60, feverPoints = 0, isFever = false;
 
-        document.getElementById('click-ntaro').addEventListener('click', () => {
-            if(gameActive) { score += 1; feverPoints += 5; updateUI(); }
+        document.getElementById('hero-click-ntaro').addEventListener('click', () => {
+            if(gameActive) { score += 2; feverPoints += 5; updateUI(); }
         });
 
         function movePlayer(clientX) {
@@ -210,13 +207,13 @@
                 const pR = player.getBoundingClientRect(), iR = item.getBoundingClientRect();
                 if (!(pR.top > iR.bottom || pR.bottom < iR.top || pR.left > iR.right || pR.right < iR.left)) {
                     if(type === 'bomb') { score = Math.max(0, score - 50); feverPoints = 0; }
-                    else if(type === 'star') { score += 30; feverPoints += 15; }
+                    else if(type === 'star') { score += 50; feverPoints += 20; }
                     else { score += 10; feverPoints += 5; }
                     updateUI(); item.remove(); clearInterval(fall);
                 }
                 if (top > container.offsetHeight) { item.remove(); clearInterval(fall); }
             }, 20);
-            setTimeout(spawnItem, isFever ? 150 : 500);
+            setTimeout(spawnItem, isFever ? 120 : 500);
         }
         loadRanking();
     </script>
