@@ -3,172 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>消しゴムんたろう 公式サイト</title>
-    <style>
-        body { background-color: #000; color: #fff; font-family: sans-serif; text-align: center; margin: 0; overflow: hidden; }
-        #profile { padding: 20px; background: linear-gradient(180deg, #222, #000); border-bottom: 2px solid #444; }
-        h1 { color: #ffeb3b; margin: 0; font-size: 24px; text-shadow: 2px 2px #f44336; }
-        .sub-text { font-size: 14px; color: #bbb; }
-        
-        /* ゲーム画面 */
-        #game-container { position: relative; width: 100vw; height: 50vh; background: #111; touch-action: none; overflow: hidden; }
-        #player { position: absolute; bottom: 10px; width: 50px; height: 50px; background: #fff; border-radius: 5px; border: 2px solid #aaa; font-size: 30px; display: flex; align-items: center; justify-content: center; transition: transform 0.1s; }
-        .dust { position: absolute; font-size: 20px; }
-        
-        /* クリッカー/UI */
-        #ui-layer { padding: 10px; display: flex; justify-content: space-around; align-items: center; background: #222; }
-        #fever-btn { padding: 10px 20px; background: #f44336; border: none; color: #fff; font-weight: bold; border-radius: 20px; display: none; box-shadow: 0 0 15px #f44336; animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-
-        /* ランキング */
-        #ranking-section { height: 30vh; overflow-y: auto; background: #000; padding: 10px; }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        th { border-bottom: 1px solid #444; color: #ffeb3b; }
-        td { padding: 5px; border-bottom: 1px solid #222; }
-        .new-mark { background: #f44336; color: #fff; font-size: 10px; padding: 2px 5px; border-radius: 5px; margin-left: 5px; }
-    </style>
-</head>
-<body>
-
-<div id="profile">
-    <h1>消しゴムんたろう 公式</h1>
-    <p class="sub-text">間違えたって大丈夫。消してやり直せばいいんだ。</p>
-</div>
-
-<div id="ui-layer">
-    <div>SCORE: <span id="score">0</span></div>
-    <button id="fever-btn" onclick="startFever()">FEVER!! タップ!</button>
-    <div>LIFE: <span id="life">❤❤❤</span></div>
-</div>
-
-<div id="game-container" id="game-area">
-    <div id="player">⬜</div>
-</div>
-
-<div id="ranking-section">
-    <h3>🏆 今日のランキング (最新順)</h3>
-    <table id="ranking-table">
-        <thead><tr><th>順位</th><th>名前</th><th>スコア</th></tr></thead>
-        <tbody id="ranking-body"></tbody>
-    </table>
-</div>
-
-<script>
-    const player = document.getElementById('player');
-    const container = document.getElementById('game-container');
-    const scoreDisp = document.getElementById('score');
-    const lifeDisp = document.getElementById('life');
-    const feverBtn = document.getElementById('fever-btn');
+    <title>消しゴムんたろう 公式サイト | 進化版</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     
-    let score = 0;
-    let life = 3;
-    let isFever = false;
-    let playerX = window.innerWidth / 2 - 25;
-    const ngWords = ["死ね", "殺す", "うんこ", "ちんこ", "まんこ", "おっぱい", "セックス", "69"]; // 必要に応じて追加
-
-    // プレイヤー移動（スマホ対応）
-    container.addEventListener('touchmove', (e) => {
-        let touchX = e.touches[0].clientX;
-        playerX = touchX - 25;
-        if (playerX < 0) playerX = 0;
-        if (playerX > window.innerWidth - 50) playerX = window.innerWidth - 50;
-        player.style.left = playerX + 'px';
-    });
-
-    // 消しカス生成
-    function createDust() {
-        if (life <= 0) return;
-        const dust = document.createElement('div');
-        dust.className = 'dust';
-        dust.style.left = Math.random() * (window.innerWidth - 20) + 'px';
-        dust.style.top = '-20px';
+    <style>
+        :root { --main-blue: #4A90E2; --bg-color: #f0f4f8; --text-color: #333; --accent-pink: #FF6B6B; --sub-blue: #EAF4FF; --fever-gold: #FFD700; }
+        body { font-family: "Hiragino Maru Gothic Pro", "Yu Gothic", sans-serif; margin: 0; background-color: var(--bg-color); color: var(--text-color); line-height: 1.6; }
+        header { background: linear-gradient(135deg, #fff, var(--sub-blue)); padding: 40px 20px; text-align: center; border-bottom: 5px solid var(--main-blue); }
+        h1 { margin: 0; color: var(--main-blue); font-size: 2.5em; text-shadow: 2px 2px 0px #fff; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; background: #fff; }
         
-        const isBonus = Math.random() < 0.1;
-        const isEnemy = !isBonus && Math.random() < 0.15;
-        
-        dust.innerText = isBonus ? '⭐' : (isEnemy ? '💣' : '☁️');
-        container.appendChild(dust);
+        /* ヒーローエリア */
+        .hero { background-color: var(--sub-blue); padding: 30px; border-radius: 20px; margin-bottom: 40px; text-align: center; position: relative; overflow: hidden; }
+        .char-img { max-width: 180px; filter: drop-shadow(0 8px 15px rgba(0,0,0,0.1)); transition: 0.3s; cursor: pointer; }
+        .char-img:active { transform: scale(1.2) rotate(10deg); } /* クリッカー要素 */
 
-        let speed = isFever ? 8 : (3 + score / 500);
-        let interval = setInterval(() => {
-            let top = parseInt(dust.style.top);
-            if (top > container.clientHeight) {
-                if (!isBonus && !isEnemy && !isFever) {
-                    life--;
-                    updateLife();
-                }
-                clearInterval(interval);
-                dust.remove();
-            } else {
-                dust.style.top = (top + speed) + 'px';
-                // 当たり判定
-                let dustRect = dust.getBoundingClientRect();
-                let playerRect = player.getBoundingClientRect();
-                if (dustRect.top < playerRect.bottom && dustRect.bottom > playerRect.top &&
-                    dustRect.left < playerRect.right && dustRect.right > playerRect.left) {
-                    
-                    if (isEnemy) {
-                        life--;
-                        updateLife();
-                    } else {
-                        score += isBonus ? 50 : 10;
-                        if (score % 100 === 0) feverBtn.style.display = 'block';
-                    }
-                    scoreDisp.innerText = score;
-                    clearInterval(interval);
-                    dust.remove();
-                }
-            }
-        }, 20);
-    }
-
-    function updateLife() {
-        lifeDisp.innerText = "❤".repeat(Math.max(0, life));
-        if (life <= 0) {
-            const name = prompt(`ゲームオーバー！スコア: ${score}\n名前を入れてね（下ネタ禁止）`);
-            saveScore(name || "名無しんたろう", score);
-            location.reload();
-        }
-    }
-
-    function startFever() {
-        isFever = true;
-        feverBtn.style.display = 'none';
-        container.style.background = '#331100';
-        setTimeout(() => {
-            isFever = false;
-            container.style.background = '#111';
-        }, 5000);
-    }
-
-    // ランキング処理（ローカルストレージ版：最新順にソート）
-    function saveScore(name, score) {
-        let cleanName = name;
-        ngWords.forEach(word => {
-            if (cleanName.includes(word)) cleanName = "きれいなんたろう";
-        });
-
-        let ranks = JSON.parse(localStorage.getItem('ntaro_rank') || "[]");
-        ranks.push({ name: cleanName, score: score, date: Date.now() });
-        // スコア順、同点なら日付が新しい（数値が大きい）順
-        ranks.sort((a, b) => b.score - a.score || b.date - a.date);
-        localStorage.setItem('ntaro_rank', JSON.stringify(ranks.slice(0, 10)));
-    }
-
-    function showRanking() {
-        let ranks = JSON.parse(localStorage.getItem('ntaro_rank') || "[]");
-        const body = document.getElementById('ranking-body');
-        body.innerHTML = ranks.map((r, i) => `
-            <tr>
-                <td>${i+1}</td>
-                <td>${r.name}${ (Date.now() - r.date < 60000) ? '<span class="new-mark">NEW</span>' : '' }</td>
-                <td>${r.score}</td>
-            </tr>
-        `).join('');
-    }
-
-    setInterval(createDust, 1000);
-    showRanking();
-</script>
-</body>
-</html>
+        /* んたろうの教え（追加コンテンツ） */
+        .wisdom-box { background: #fff; border-left: 5px solid var(--accent-pink); padding: 15px; margin: 20px 0;
