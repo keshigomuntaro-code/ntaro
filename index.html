@@ -20,4 +20,239 @@
         .char-img:active { transform: scale(1.2) rotate(10deg); } /* クリッカー要素 */
 
         /* んたろうの教え（追加コンテンツ） */
-        .wisdom-box { background: #fff; border-left: 5px solid var(--accent-pink); padding: 15px; margin: 20px 0;
+        .wisdom-box { background: #fff; border-left: 5px solid var(--accent-pink); padding: 15px; margin: 20px 0; font-style: italic; text-align: left; }
+
+        /* ゲームエリア */
+        #game-section { background: #222; color: #fff; padding: 20px; border-radius: 20px; position: relative; }
+        #game-container { position: relative; width: 100%; height: 400px; background-color: #111; border: 2px solid #444; border-radius: 10px; overflow: hidden; touch-action: none; }
+        #player { position: absolute; bottom: 10px; width: 60px; z-index: 10; pointer-events: none; filter: brightness(1.2); }
+        .kusu { position: absolute; font-size: 20px; }
+        .fever-mode { animation: fever-bg 0.5s infinite; }
+        @keyframes fever-bg { 0% { background: #111; } 50% { background: #330000; } 100% { background: #111; } }
+        
+        /* ボタン・UI */
+        .btn { padding: 12px 30px; font-weight: bold; border-radius: 50px; border: none; cursor: pointer; transition: 0.2s; }
+        .btn-main { background: var(--main-blue); color: white; }
+        #fever-gauge-container { width: 100%; height: 10px; background: #444; border-radius: 5px; margin: 10px 0; overflow: hidden; }
+        #fever-bar { width: 0%; height: 100%; background: var(--fever-gold); transition: 0.1s; }
+
+        /* ランキング */
+        .ranking-list { background: #fff; border-radius: 15px; border: 2px solid var(--sub-blue); overflow: hidden; color: #333; }
+        .ranking-item { display: flex; justify-content: space-between; padding: 12px 20px; border-bottom: 1px solid #eee; }
+        .ranking-item:first-child { background: #fff9c4; font-weight: bold; }
+        .new-label { background: var(--accent-pink); color: #fff; font-size: 0.7em; padding: 2px 6px; border-radius: 4px; margin-left: 8px; }
+
+        /* モーダル */
+        .modal { display: none; position: fixed; z-index: 3000; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); }
+        .modal-content { background: #fff; margin: 20% auto; padding: 30px; width: 80%; max-width: 400px; border-radius: 20px; text-align: center; color: #333; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>消しゴムんたろう 公式</h1>
+        <p>〜 失敗を、明日の勇気に変える場所 〜</p>
+    </header>
+
+    <div class="container">
+        <section class="hero">
+            <img src="image_b322c7.png" alt="んたろう" class="char-img" id="click-ntaro">
+            <p><strong>上の「んたろう」をタップしてみよう！</strong></p>
+            <div class="wisdom-box">
+                <strong>んたろうの格言：</strong><br>
+                「真っ白なノートもいいけれど、消し跡があるノートは、君が挑戦した証拠なんだよ。」
+            </div>
+            
+            <div class="profile-card" style="text-align: left; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+                <h3 style="margin-top:0; color:var(--main-blue);">✨ んたろうの秘密エピソード</h3>
+                <p>実はんたろう、昔は「修正ペン」に憧れていました。でも、自分の身を削ってでも「やり直せるチャンス」を残せる今の仕事に誇りを持っています。ちなみに、好きな音楽は「ゴシゴシ」という摩擦音です。</p>
+            </div>
+        </section>
+
+        <section id="game-section">
+            <h2 style="color:var(--fever-gold);">進化した！消しカスキャッチ</h2>
+            <div id="fever-gauge-container"><div id="fever-bar"></div></div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <div id="score-board">スコア: 0</div>
+                <div id="timer">残り時間: 60s</div>
+            </div>
+
+            <div id="game-container">
+                <img src="image_b322c7.png" id="player">
+                <div id="start-screen" style="position:absolute; width:100%; height:100%; background:rgba(0,0,0,0.7); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:100;">
+                    <button class="btn btn-main" onclick="startGame()">ゲームスタート</button>
+                    <p style="font-size: 0.8em; margin-top: 10px;">（爆弾💣を避けて、星⭐とカス☁️を拾え！）</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="title" style="background:var(--main-blue); color:#fff; padding:5px 20px; border-radius:20px;">🏆 世界ランキング (最新スコア優先)</h2>
+            <div class="ranking-list" id="ranking-display">読み込み中...</div>
+        </section>
+    </div>
+
+    <div id="scoreModal" class="modal">
+        <div class="modal-content">
+            <h2 style="color:var(--accent-pink);">終了！</h2>
+            <p>あなたの記録: <span id="final-score" style="font-size:2em; font-weight:bold;">0</span></p>
+            <input type="text" id="rankingName" placeholder="名前(5文字)" maxlength="5">
+            <button class="btn btn-main" id="saveScoreBtn" onclick="saveScoreToFirebase()">ランキングに登録</button>
+        </div>
+    </div>
+
+    <footer>&copy; 2024 消しゴムんたろうを守る会 - 全ての失敗を愛する人に。</footer>
+
+    <script>
+        // Firebase初期化（あなたの設定を保持）
+        const firebaseConfig = {
+            apiKey: "AIzaSyBjhqORK7LsHZZWw_aDnVPSA_IstYqBLRw",
+            authDomain: "keshigomuuu-f5183.firebaseapp.com",
+            projectId: "keshigomuuu-f5183",
+            storageBucket: "keshigomuuu-f5183.firebasestorage.app",
+            messagingSenderId: "541731028448",
+            appId: "1:541731028448:web:512938a4ca14e61842bf85",
+            measurementId: "G-8H0QH3TMZN"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // --- 下ネタ・NGワードフィルタ ---
+        const ngWords = ["死ね", "殺す", "うんこ", "ちんこ", "まんこ", "セッ", "sex"]; 
+        function filterName(name) {
+            let clean = name;
+            ngWords.forEach(word => {
+                if(clean.includes(word)) clean = "紳士";
+            });
+            return clean;
+        }
+
+        // --- ランキング保存（最新順ソート対応） ---
+        async function saveScoreToFirebase() {
+            const rawName = document.getElementById('rankingName').value || "ななし";
+            const name = filterName(rawName);
+            const scoreVal = parseInt(document.getElementById('final-score').innerText);
+            const btn = document.getElementById('saveScoreBtn');
+            btn.disabled = true;
+            try {
+                // dateを入れて保存することで「同点なら新しい人が上」を可能にする
+                await db.collection("ranking").add({ name: name, score: scoreVal, date: firebase.firestore.FieldValue.serverTimestamp() });
+                document.getElementById('scoreModal').style.display = 'none';
+            } catch(e) { console.error(e); }
+            btn.disabled = false;
+        }
+
+        // ランキング読み込み（スコア降順 ➔ 日付降順）
+        function loadRanking() {
+            db.collection("ranking")
+              .orderBy("score", "desc")
+              .orderBy("date", "desc") // これで「古い人は下」になる
+              .limit(10)
+              .onSnapshot(snapshot => {
+                const display = document.getElementById('ranking-display');
+                display.innerHTML = snapshot.docs.map((doc, i) => {
+                    const data = doc.data();
+                    const isNew = data.date && (Date.now() - data.date.toMillis() < 300000); // 5分以内ならNEW
+                    return `<div class="ranking-item">
+                        <span>${i+1}位: ${data.name}${isNew ? '<span class="new-label">NEW</span>' : ''}</span>
+                        <span>${data.score}点</span>
+                    </div>`;
+                }).join('') || "まだ記録がありません。";
+            });
+        }
+
+        // --- 進化したゲームエンジン ---
+        const container = document.getElementById('game-container');
+        const player = document.getElementById('player');
+        const feverBar = document.getElementById('fever-bar');
+        let score = 0, gameActive = false, timeLeft = 60, feverPoints = 0, isFever = false;
+
+        // クリッカー要素
+        document.getElementById('click-ntaro').addEventListener('click', () => {
+            if(gameActive) {
+                score += 1;
+                feverPoints += 5;
+                updateUI();
+            }
+        });
+
+        function movePlayer(clientX) {
+            if(!gameActive) return;
+            const rect = container.getBoundingClientRect();
+            let x = clientX - rect.left - (player.offsetWidth / 2);
+            if(x < 0) x = 0; if(x > rect.width - player.offsetWidth) x = rect.width - player.offsetWidth;
+            player.style.left = x + 'px';
+        }
+        container.addEventListener('mousemove', (e) => movePlayer(e.clientX));
+        container.addEventListener('touchmove', (e) => { e.preventDefault(); movePlayer(e.touches[0].clientX); }, {passive: false});
+
+        function startGame() {
+            gameActive = true; score = 0; timeLeft = 60; feverPoints = 0; isFever = false;
+            updateUI();
+            document.getElementById('start-screen').style.display = 'none';
+            spawnItem();
+            let timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').innerText = `残り時間: ${timeLeft}s`;
+                if(timeLeft <= 0) {
+                    gameActive = false; clearInterval(timer);
+                    document.getElementById('final-score').innerText = score;
+                    document.getElementById('scoreModal').style.display = 'block';
+                    document.getElementById('start-screen').style.display = 'flex';
+                }
+            }, 1000);
+        }
+
+        function updateUI() {
+            document.getElementById('score-board').innerText = `スコア: ${score}`;
+            feverBar.style.width = Math.min(feverPoints, 100) + '%';
+            if(feverPoints >= 100 && !isFever) triggerFever();
+        }
+
+        function triggerFever() {
+            isFever = true;
+            container.classList.add('fever-mode');
+            setTimeout(() => {
+                isFever = false;
+                feverPoints = 0;
+                container.classList.remove('fever-mode');
+                updateUI();
+            }, 5000);
+        }
+
+        function spawnItem() {
+            if(!gameActive) return;
+            const item = document.createElement('div');
+            item.className = 'kusu';
+            const rnd = Math.random();
+            let type = 'common';
+            if(rnd < 0.1) type = 'bomb';  // 爆弾
+            else if(rnd < 0.2) type = 'star'; // ボーナス
+
+            item.innerText = (type === 'bomb') ? '💣' : (type === 'star' ? '⭐' : '☁️');
+            item.style.left = Math.random() * (container.offsetWidth - 30) + 'px';
+            item.style.top = '0px';
+            container.appendChild(item);
+
+            let speed = isFever ? 10 : (4 + score / 200);
+            let fall = setInterval(() => {
+                let top = parseInt(item.style.top);
+                item.style.top = (top + speed) + 'px';
+                
+                const pR = player.getBoundingClientRect(), iR = item.getBoundingClientRect();
+                if (!(pR.top > iR.bottom || pR.bottom < iR.top || pR.left > iR.right || pR.right < iR.left)) {
+                    if(type === 'bomb') { score = Math.max(0, score - 50); feverPoints = 0; }
+                    else if(type === 'star') { score += 30; feverPoints += 15; }
+                    else { score += 10; feverPoints += 5; }
+                    updateUI();
+                    item.remove(); clearInterval(fall);
+                }
+                if (top > container.offsetHeight) { item.remove(); clearInterval(fall); }
+            }, 20);
+            setTimeout(spawnItem, isFever ? 150 : 500);
+        }
+
+        loadRanking();
+    </script>
+</body>
+</html>
