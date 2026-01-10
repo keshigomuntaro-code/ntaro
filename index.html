@@ -12,41 +12,50 @@
         header { background: linear-gradient(135deg, #fff, var(--sub-blue)); padding: 40px 20px; border-bottom: 5px solid var(--main-blue); }
         h1 { margin: 0; color: var(--main-blue); font-size: 2.5em; }
         .container { max-width: 800px; margin: 0 auto; padding: 20px; background: #fff; }
-        .hero { background-color: var(--sub-blue); padding: 30px; border-radius: 20px; margin-bottom: 40px; }
+        
+        /* セクション共通 */
+        section { margin-bottom: 40px; padding: 20px; border-radius: 20px; }
+        .hero { background-color: var(--sub-blue); }
         .char-img { max-width: 180px; filter: drop-shadow(0 8px 15px rgba(0,0,0,0.1)); cursor: pointer; transition: 0.2s; }
         .char-img:active { transform: scale(1.1); }
-        #game-section { background: var(--main-blue); color: #fff; padding: 20px; border-radius: 20px; }
+        
+        /* ゲームエリア */
+        #game-section { background: var(--main-blue); color: #fff; }
         #game-container { position: relative; width: 100%; height: 400px; background-color: var(--sub-blue); border: 4px solid #fff; border-radius: 10px; overflow: hidden; touch-action: none; }
         #player { position: absolute; bottom: 10px; width: 60px; z-index: 10; pointer-events: none; }
         .kusu { position: absolute; font-size: 24px; }
-        .fever-mode { animation: fever-bg 0.5s infinite; }
-        @keyframes fever-bg { 0%, 100% { background: var(--sub-blue); } 50% { background: #fff176; } }
+        
+        /* UIパーツ */
         .btn { padding: 12px 30px; font-weight: bold; border-radius: 50px; border: none; cursor: pointer; }
         .btn-main { background: #fff; color: var(--main-blue); }
         #fever-gauge-container { width: 100%; height: 12px; background: rgba(255,255,255,0.3); border-radius: 6px; margin: 10px 0; overflow: hidden; border: 1px solid #fff; }
         #fever-bar { width: 0%; height: 100%; background: var(--fever-gold); transition: 0.1s; }
-        .ranking-list { background: #fff; border-radius: 15px; border: 2px solid var(--sub-blue); color: #333; margin-top: 10px; }
-        .ranking-item { display: flex; justify-content: space-between; padding: 12px 20px; border-bottom: 1px solid #eee; }
-        .new-label { background: var(--accent-pink); color: #fff; font-size: 0.7em; padding: 2px 6px; border-radius: 4px; margin-left: 8px; }
+        
+        /* ランキング & ログ */
+        .card-list { background: #fff; border-radius: 15px; border: 2px solid var(--sub-blue); color: #333; margin-top: 10px; text-align: left; }
+        .list-item { padding: 12px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
+        .log-item { padding: 12px 20px; border-bottom: 1px solid #eee; font-size: 0.9em; }
+        .log-date { color: var(--main-blue); font-weight: bold; margin-right: 10px; }
+        
         .modal { display: none; position: fixed; z-index: 3000; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); }
         .modal-content { background: #fff; margin: 20% auto; padding: 30px; width: 80%; max-width: 400px; border-radius: 20px; color: #333; }
-        input { width: 90%; padding: 10px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ddd; }
+        input, textarea { width: 90%; padding: 10px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ddd; }
+        .admin-trigger { cursor: help; }
     </style>
 </head>
 <body>
     <header><h1>消しゴムんたろう 公式</h1><p>失敗を、明日の勇気に変える場所</p></header>
+    
     <div class="container">
         <section class="hero">
             <img src="image_b322c7.png" alt="消しゴムんたろう" class="char-img" id="hero-click">
-            <p><strong>上の消しゴムんたろうを連打！</strong></p>
-            <div style="text-align: left; padding: 15px; background: #fff; border-radius: 10px; font-size: 0.9em;">
-                消しゴムんたろうの秘密：身を削って頑張る姿に、文房具界ではファンが急増中。
-            </div>
+            <p><strong>消しゴムんたろうを連打して応援！</strong></p>
         </section>
+
         <section id="game-section">
-            <h2 style="color:#fff; margin-top:0;">ミニゲーム：消しカスキャッチ</h2>
+            <h2>消しカスキャッチ</h2>
             <div id="fever-gauge-container"><div id="fever-bar"></div></div>
-            <div style="display: flex; justify-content: space-between; font-weight: bold;">
+            <div style="display: flex; justify-content: space-between; font-weight: bold; padding: 0 10px;">
                 <div id="score-board">スコア: 0</div>
                 <div id="timer">残り時間: 60s</div>
             </div>
@@ -54,21 +63,27 @@
                 <img src="image_b322c7.png" id="player">
                 <div id="start-screen" style="position:absolute; width:100%; height:100%; background:rgba(74, 144, 226, 0.8); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:100;">
                     <button class="btn btn-main" onclick="startGame()">ゲームスタート</button>
-                    <p style="color:#fff; font-size: 0.8em; margin-top: 15px;">💣を避けて、⭐と☁️を拾え！</p>
                 </div>
             </div>
         </section>
-        <section style="margin-top:40px;">
+
+        <section>
+            <h2 class="admin-trigger" oncontextmenu="addLog();return false;" onclick="handleLongPress(addLog)" style="background:var(--main-blue); color:#fff; padding:8px 20px; border-radius:30px; display:inline-block;">🚀 アップデートログ</h2>
+            <p style="font-size:0.7em; color:#999;">（管理者は見出しを長押しで追加）</p>
+            <div class="card-list" id="log-display">読み込み中...</div>
+        </section>
+
+        <section>
             <h2 style="background:var(--main-blue); color:#fff; padding:8px 20px; border-radius:30px; display:inline-block;">🏆 スコアランキング</h2>
-            <div class="ranking-list" id="ranking-display">読み込み中...</div>
+            <div class="card-list" id="ranking-display">読み込み中...</div>
         </section>
     </div>
+
     <div id="scoreModal" class="modal"><div class="modal-content">
         <h2>終了！</h2><p>記録: <span id="final-score" style="font-size:2em; font-weight:bold;">0</span></p>
         <input type="text" id="rankingName" placeholder="名前(5文字)" maxlength="5">
-        <button class="btn" style="background:var(--main-blue); color:#fff; width:100%;" id="saveScoreBtn" onclick="saveScoreToFirebase()">ランキングに登録</button>
+        <button class="btn" style="background:var(--main-blue); color:#fff; width:100%;" onclick="saveScoreToFirebase()">ランキングに登録</button>
     </div></div>
-    <footer style="padding:30px; color:#999;">&copy; 消しゴムんたろうを守る会</footer>
 
     <script>
         const firebaseConfig = {
@@ -82,37 +97,76 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        const ADMIN_PASS = "keshi99";
+
+        // --- アップデートログ機能 ---
+        async function addLog() {
+            const pass = prompt("管理者パスワード");
+            if(pass !== ADMIN_PASS) return alert("認証失敗");
+            const text = prompt("アップデート内容を入力してください");
+            if(text) {
+                await db.collection("logs").add({
+                    text: text,
+                    date: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+        }
+
+        function loadLogs() {
+            db.collection("logs").orderBy("date", "desc").limit(5).onSnapshot(snap => {
+                const display = document.getElementById('log-display');
+                display.innerHTML = snap.docs.map(doc => {
+                    const data = doc.data();
+                    const d = data.date ? data.date.toDate() : new Date();
+                    const dateStr = `${d.getMonth()+1}/${d.getDate()}`;
+                    return `<div class="log-item" oncontextmenu="deleteDoc('logs','${doc.id}');return false;">
+                                <span class="log-date">${dateStr}</span>${data.text}
+                            </div>`;
+                }).join('') || "<div class='log-item'>ログはありません</div>";
+            });
+        }
+
+        // --- ランキング & 削除共通 ---
+        async function deleteDoc(col, id) {
+            if(prompt("管理者パスワード") === ADMIN_PASS) {
+                if(confirm("削除しますか？")) await db.collection(col).doc(id).delete();
+            }
+        }
 
         async function saveScoreToFirebase() {
             const name = document.getElementById('rankingName').value || "ななし";
             const scoreVal = parseInt(document.getElementById('final-score').innerText);
-            document.getElementById('saveScoreBtn').disabled = true;
-            try {
-                await db.collection("ranking").add({ name: name, score: scoreVal, date: firebase.firestore.FieldValue.serverTimestamp() });
-                document.getElementById('scoreModal').style.display = 'none';
-            } catch(e) { alert("エラー！Firebaseのルールかインデックスを確認してね。"); }
-            document.getElementById('saveScoreBtn').disabled = false;
+            await db.collection("ranking").add({ name: name, score: scoreVal, date: firebase.firestore.FieldValue.serverTimestamp() });
+            document.getElementById('scoreModal').style.display = 'none';
         }
 
-        // ★ここが「スコア順、同点なら最新順」の魔法
         function loadRanking() {
-            db.collection("ranking").orderBy("score", "desc").orderBy("date", "desc").limit(10).onSnapshot(snapshot => {
+            db.collection("ranking").orderBy("score", "desc").orderBy("date", "desc").limit(10).onSnapshot(snap => {
                 const display = document.getElementById('ranking-display');
-                display.innerHTML = snapshot.docs.map((doc, i) => {
+                display.innerHTML = snap.docs.map((doc, i) => {
                     const data = doc.data();
-                    const isNew = data.date && (Date.now() - data.date.toMillis() < 300000);
-                    return `<div class="ranking-item"><span>${i+1}位: ${data.name}${isNew?'<span class="new-label">NEW</span>':''}</span><span>${data.score}点</span></div>`;
-                }).join('') || "まだ記録がありません。";
+                    return `<div class="list-item" oncontextmenu="deleteDoc('ranking','${doc.id}');return false;" onclick="handleLongPress(()=>deleteDoc('ranking','${doc.id}'))">
+                        <span>${i+1}位: ${data.name}</span><span>${data.score}点</span>
+                    </div>`;
+                }).join('') || "<div class='list-item'>まだ記録がありません</div>";
             });
         }
 
+        // 長押し検知用
+        let pressTimer;
+        function handleLongPress(func) {
+            pressTimer = setTimeout(func, 800);
+        }
+        window.onmouseup = () => clearTimeout(pressTimer);
+        window.ontouchend = () => clearTimeout(pressTimer);
+
+        // --- ゲームロジック (省略せず統合) ---
         const container = document.getElementById('game-container');
         const player = document.getElementById('player');
         const feverBar = document.getElementById('fever-bar');
         let score = 0, gameActive = false, timeLeft = 60, feverPoints = 0, isFever = false;
 
         document.getElementById('hero-click').addEventListener('click', () => { if(gameActive) { score += 2; feverPoints += 5; updateUI(); } });
-
         function movePlayer(clientX) {
             if(!gameActive) return;
             const rect = container.getBoundingClientRect();
@@ -127,9 +181,9 @@
             gameActive = true; score = 0; timeLeft = 60; feverPoints = 0; isFever = false; updateUI();
             document.getElementById('start-screen').style.display = 'none';
             spawnItem();
-            let timer = setInterval(() => {
+            let timerInterval = setInterval(() => {
                 timeLeft--; document.getElementById('timer').innerText = `残り時間: ${timeLeft}s`;
-                if(timeLeft <= 0) { gameActive = false; clearInterval(timer); document.getElementById('final-score').innerText = score; document.getElementById('scoreModal').style.display = 'block'; document.getElementById('start-screen').style.display = 'flex'; }
+                if(timeLeft <= 0) { gameActive = false; clearInterval(timerInterval); document.getElementById('final-score').innerText = score; document.getElementById('scoreModal').style.display = 'block'; document.getElementById('start-screen').style.display = 'flex'; }
             }, 1000);
         }
         function updateUI() { document.getElementById('score-board').innerText = `スコア: ${score}`; feverBar.style.width = Math.min(feverPoints, 100) + '%'; if(feverPoints >= 100 && !isFever) triggerFever(); }
@@ -155,6 +209,9 @@
             }, 20);
             setTimeout(spawnItem, isFever ? 120 : 500);
         }
+
+        // 初期読み込み
+        loadLogs();
         loadRanking();
     </script>
 </body>
