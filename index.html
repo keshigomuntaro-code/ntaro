@@ -33,6 +33,10 @@
         .btn { padding: 10px 20px; font-weight: bold; border-radius: 50px; border: none; cursor: pointer; background: var(--main-blue); color: #fff; }
         .modal { display: none; position: fixed; z-index: 9999; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); }
         .modal-content { background: #fff; margin: 20% auto; padding: 30px; width: 80%; border-radius: 20px; }
+        
+        /* スコア改ざん用のスタイル */
+        #final-score { border-bottom: 2px dashed var(--main-blue); padding: 0 5px; cursor: help; }
+        
         .fever-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 3em; font-weight: bold; color: #ffeb3b; text-shadow: 2px 2px 0 #f57f17; z-index: 100; display: none; }
         .fever-active #game-container { animation: fever-bg 0.5s infinite; }
         @keyframes fever-bg { 0%, 100% { background: #fff9c4; } 50% { background: #fff176; } }
@@ -86,8 +90,10 @@
     </div>
 
     <div id="scoreModal" class="modal"><div class="modal-content">
-        <h2 style="color:var(--main-blue);">終了！</h2><p>スコア: <span id="final-score">0</span></p>
-        <input type="text" id="rankingName" placeholder="なまえを入力" maxlength="5">
+        <h2 style="color:var(--main-blue);">終了！</h2>
+        <p>最終スコア: <span id="final-score" onclick="manualEditScore()">0</span></p>
+        <p style="font-size: 0.7em; color: #999;">(スコアをクリックで修正可能)</p>
+        <input type="text" id="rankingName" placeholder="ランキング用のなまえ" maxlength="5" style="width:100%; padding:10px; margin-bottom:15px; border-radius:10px; border:1px solid #ddd; box-sizing:border-box;">
         <button class="btn" style="width:100%;" onclick="saveScoreToFirebase()">ランキング登録</button>
     </div></div>
 
@@ -105,49 +111,60 @@
         const db = firebase.firestore();
         const ADMIN_PASS = "keshi99";
 
-        // --- 共通削除機能 ---
-        async function deleteDoc(col, id) {
-            const pass = prompt("管理者パスワードを入力してください");
+        // --- スコアをその場で改ざん ---
+        function manualEditScore() {
+            const pass = prompt("管理者パスワードを入力");
             if(pass === ADMIN_PASS) {
-                if(confirm("このデータを削除しますか？")) {
-                    await db.collection(col).doc(id).delete();
+                const newScore = prompt("書き換えたいスコアを入力してください", score);
+                if(newScore !== null) {
+                    score = parseInt(newScore); // プログラム内の変数を書き換え
+                    document.getElementById('final-score').innerText = score; // 表示を書き換え
+                    alert("スコアを改ざんしました。");
                 }
-            } else if(pass !== null) {
-                alert("パスワードが違います");
             }
         }
 
-        // --- チャット ---
-        async function sendChat() {
-            const name = document.getElementById('chat-name').value || "ななし";
-            const msg = document.getElementById('chat-msg').value;
-            if(!msg) return;
-            await db.collection("chats").add({ name, msg, date: firebase.firestore.FieldValue.serverTimestamp() });
-            document.getElementById('chat-msg').value = "";
+        // --- ランキング編集機能 ---
+        async function editOrDeleteRanking(id, currentName, currentScore) {
+            const pass = prompt("管理者パスワードを入力");
+            if(pass !== ADMIN_PASS) return;
+            const mode = prompt("1:削除 2:改ざん");
+            if(mode === "1") await db.collection("ranking").doc(id).delete();
+            else if(mode === "2") {
+                const ns = prompt("新スコア", currentScore);
+                if(ns) await db.collection("ranking").doc(id).update({ score: parseInt(ns) });
+            }
         }
+
+        async function deleteDoc(col, id) {
+            const pass = prompt("パスワード");
+            if(pass === ADMIN_PASS && confirm("消しますか？")) await db.collection(col).doc(id).delete();
+        }
+
+        // --- データ読み込み ---
         function loadChats() {
             db.collection("chats").orderBy("date", "asc").limitToLast(15).onSnapshot(snap => {
                 document.getElementById('chat-display').innerHTML = snap.docs.map(doc => 
-                    `<div class="chat-bubble" oncontextmenu="deleteDoc('chats','${doc.id}');return false;" onclick="handleLongPress(()=>deleteDoc('chats','${doc.id}'))">
+                    `<div class="chat-bubble" onclick="handleLongPress(()=>deleteDoc('chats','${doc.id}'))">
                         <div class="chat-name">${doc.data().name}</div>${doc.data().msg}
                     </div>`).join('');
                 document.getElementById('chat-display').scrollTop = 9999;
             });
         }
-
-        // --- ログ & ランキング ---
         function loadLogs() {
             db.collection("logs").orderBy("date", "desc").limit(3).onSnapshot(snap => {
                 document.getElementById('log-display').innerHTML = snap.docs.map(doc => 
-                    `<div class="list-item" oncontextmenu="deleteDoc('logs','${doc.id}');return false;" onclick="handleLongPress(()=>deleteDoc('logs','${doc.id}'))">・${doc.data().text}</div>`).join('');
+                    `<div class="list-item" onclick="handleLongPress(()=>deleteDoc('logs','${doc.id}'))">・${doc.data().text}</div>`).join('');
             });
         }
         function loadRanking() {
             db.collection("ranking").orderBy("score", "desc").orderBy("date", "desc").limit(5).onSnapshot(snap => {
-                document.getElementById('ranking-display').innerHTML = snap.docs.map((doc, i) => 
-                    `<div class="list-item" oncontextmenu="deleteDoc('ranking','${doc.id}');return false;" onclick="handleLongPress(()=>deleteDoc('ranking','${doc.id}'))">
-                        <span>${i+1}位:${doc.data().name}</span><span>${doc.data().score}</span>
-                    </div>`).join('');
+                document.getElementById('ranking-display').innerHTML = snap.docs.map((doc, i) => {
+                    const d = doc.data();
+                    return `<div class="list-item" onclick="handleLongPress(()=>editOrDeleteRanking('${doc.id}','${d.name}',${d.score}))">
+                        <span>${i+1}位:${d.name}</span><span>${d.score}</span>
+                    </div>`;
+                }).join('');
             });
         }
 
@@ -160,12 +177,10 @@
         let score = 0, gameActive = false, timeLeft = 45, feverValue = 0, isFever = false;
 
         document.getElementById('hero-click').addEventListener('click', () => { if(gameActive) addScore(5); });
-
         function startGame() {
             gameActive = true; score = 0; timeLeft = 45; feverValue = 0; isFever = false;
             document.getElementById('start-screen').style.display = 'none';
-            updateUI();
-            spawnItem();
+            updateUI(); spawnItem();
             let timerInterval = setInterval(() => {
                 timeLeft--;
                 document.getElementById('timer').innerText = `あと: ${timeLeft}s`;
@@ -178,49 +193,23 @@
                 }
             }, 1000);
         }
-
-        function addScore(p) {
-            score += p;
-            if(!isFever) {
-                feverValue = Math.min(100, feverValue + (p / 2));
-                if(feverValue >= 100) startFever();
-            }
-            updateUI();
-        }
-        function startFever() {
-            isFever = true; feverMsg.style.display = 'block';
-            mainBody.classList.add('fever-active');
-            player.style.width = "120px";
-            setTimeout(endFever, 7000);
-        }
-        function endFever() {
-            isFever = false; feverValue = 0; feverMsg.style.display = 'none';
-            mainBody.classList.remove('fever-active');
-            player.style.width = "60px";
-            updateUI();
-        }
-        function updateUI() {
-            document.getElementById('score-board').innerText = `スコア: ${score}`;
-            feverBar.style.width = feverValue + "%";
-        }
+        function addScore(p) { score += p; if(!isFever) { feverValue = Math.min(100, feverValue + (p / 2)); if(feverValue >= 100) startFever(); } updateUI(); }
+        function startFever() { isFever = true; feverMsg.style.display = 'block'; mainBody.classList.add('fever-active'); player.style.width = "120px"; setTimeout(endFever, 7000); }
+        function endFever() { isFever = false; feverValue = 0; feverMsg.style.display = 'none'; mainBody.classList.remove('fever-active'); player.style.width = "60px"; updateUI(); }
+        function updateUI() { document.getElementById('score-board').innerText = `スコア: ${score}`; feverBar.style.width = feverValue + "%"; }
         function spawnItem() {
             if(!gameActive) return;
             const item = document.createElement('div');
             item.className = 'kusu';
             const r = Math.random();
-            if(r < 0.15 && !isFever) item.innerText = '💣';
-            else if(r < 0.3) item.innerText = '⭐';
-            else item.innerText = '☁️';
-            item.style.left = Math.random() * (container.offsetWidth - 30) + 'px';
-            item.style.top = '-30px';
+            if(r < 0.15 && !isFever) item.innerText = '💣'; else if(r < 0.3) item.innerText = '⭐'; else item.innerText = '☁️';
+            item.style.left = Math.random() * (container.offsetWidth - 30) + 'px'; item.style.top = '-30px';
             container.appendChild(item);
             let fall = setInterval(() => {
-                let top = parseInt(item.style.top);
-                item.style.top = (top + (isFever?8:5)) + 'px';
+                let top = parseInt(item.style.top); item.style.top = (top + (isFever?8:5)) + 'px';
                 const pR = player.getBoundingClientRect(), iR = item.getBoundingClientRect();
                 if (!(pR.top > iR.bottom || pR.bottom < iR.top || pR.left > iR.right || pR.right < iR.left)) {
-                    if(item.innerText === '💣') score = Math.max(0, score - 50);
-                    else addScore(item.innerText === '⭐' ? 30 : 10);
+                    if(item.innerText === '💣') score = Math.max(0, score - 50); else addScore(item.innerText === '⭐' ? 30 : 10);
                     item.remove(); clearInterval(fall);
                 }
                 if (top > container.offsetHeight) { item.remove(); clearInterval(fall); }
@@ -228,16 +217,22 @@
             setTimeout(spawnItem, isFever ? 150 : 500);
         }
 
-        // --- 管理用 ---
+        // --- その他機能 ---
+        async function sendChat() {
+            const name = document.getElementById('chat-name').value || "ななし";
+            const msg = document.getElementById('chat-msg').value;
+            if(!msg) return;
+            await db.collection("chats").add({ name, msg, date: firebase.firestore.FieldValue.serverTimestamp() });
+            document.getElementById('chat-msg').value = "";
+        }
         async function saveScoreToFirebase() {
             const name = document.getElementById('rankingName').value || "ななし";
             await db.collection("ranking").add({ name, score, date: firebase.firestore.FieldValue.serverTimestamp() });
             document.getElementById('scoreModal').style.display = 'none';
         }
         async function addLog() {
-            const pass = prompt("管理者パスワード");
-            if(pass === ADMIN_PASS) {
-                const t = prompt("新しいログの内容を入力してください");
+            if(prompt("パスワード") === ADMIN_PASS) {
+                const t = prompt("ログ内容");
                 if(t) await db.collection("logs").add({text:t, date: firebase.firestore.FieldValue.serverTimestamp()});
             }
         }
