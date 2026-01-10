@@ -13,7 +13,7 @@
         .account-bar { background: var(--main-blue); color: #fff; padding: 5px; font-size: 0.8em; display: flex; justify-content: center; align-items: center; gap: 10px; }
         .container { max-width: 800px; margin: 0 auto; padding: 15px; background: #fff; }
         section { margin-bottom: 25px; padding: 20px; border-radius: 20px; background: #fff; border: 2px solid var(--sub-blue); }
-        .hero { background-color: var(--sub-blue); border: none; }
+        .hero { background-color: var(--sub-blue); border: none; display: block !important; visibility: visible !important; }
         .char-img { max-width: 140px; filter: drop-shadow(0 8px 15px rgba(0,0,0,0.1)); cursor: pointer; }
         .profile-text { text-align: left; background: #fff; padding: 12px; border-radius: 10px; font-size: 0.85em; margin-top: 10px; border-left: 5px solid var(--main-blue); }
         #game-section { background: var(--main-blue); color: #fff; border: none; position: relative; overflow: hidden; }
@@ -22,7 +22,7 @@
         .kusu { position: absolute; font-size: 28px; z-index: 5; }
         .gauge-container { width: 100%; height: 15px; background: rgba(255,255,255,0.3); border-radius: 10px; margin: 10px 0; overflow: hidden; border: 2px solid #fff; }
         #fever-bar { width: 0%; height: 100%; background: var(--fever-gold); transition: width 0.2s; }
-        .list-box { text-align: left; background: #fff; border-radius: 10px; padding: 10px; min-height: 50px; overflow-y: auto; }
+        .list-box { text-align: left; background: #fff; border-radius: 10px; padding: 10px; min-height: 50px; }
         .list-item { padding: 8px 10px; border-bottom: 1px solid #eee; font-size: 0.85em; display: flex; justify-content: space-between; cursor: pointer; }
         .chat-container { text-align: left; height: 300px; overflow-y: auto; padding: 15px; background: var(--sub-blue); border-radius: 15px; margin-bottom: 10px; display: flex; flex-direction: column; }
         .chat-bubble { background: #fff; border-radius: 15px; padding: 8px 12px; margin-bottom: 8px; border: 1px solid #ddd; align-self: flex-start; max-width: 85%; word-break: break-all; font-size: 0.9em; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); }
@@ -98,9 +98,13 @@
         localStorage.setItem("ntaro_id", myID);
         let myName = localStorage.getItem("ntaro_user") || "";
 
-        // --- データ読み込み開始（ログイン前でも開始する） ---
+        // --- 画面表示を優先する仕組み ---
+        window.onload = () => {
+            startLoadingData(); // 先にチャットやログなどのデータを出す
+            setTimeout(initAccount, 500); // 0.5秒遅らせてログイン画面を出す
+        };
+
         function startLoadingData() {
-            // チャット
             db.collection("chats").orderBy("date", "asc").limitToLast(15).onSnapshot(snap => {
                 document.getElementById('chat-display').innerHTML = snap.docs.map(doc => {
                     const d = doc.data();
@@ -111,11 +115,9 @@
                 }).join('');
                 document.getElementById('chat-display').scrollTop = 9999;
             });
-            // ログ
             db.collection("logs").orderBy("date", "desc").limit(3).onSnapshot(snap => {
                 document.getElementById('log-display').innerHTML = snap.docs.map(doc => `<div class="list-item" onclick="handleLongPress(()=>deleteDoc('logs','${doc.id}'))">・${doc.data().text}</div>`).join('');
             });
-            // ランキング
             db.collection("ranking").orderBy("score", "desc").limit(5).onSnapshot(snap => {
                 document.getElementById('ranking-display').innerHTML = snap.docs.map((doc, i) => {
                     const d = doc.data();
@@ -126,10 +128,14 @@
             });
         }
 
-        // --- アカウント処理 ---
         async function initAccount() {
-            if (await checkBan()) return;
-            startLoadingData(); // サイトを開いたら即読み込み開始
+            const banDoc = await db.collection("bans").doc(myID).get();
+            if(banDoc.exists && banDoc.data().until.toDate() > new Date()) {
+                document.getElementById("main-content").style.display = "none";
+                document.getElementById("ban-screen").style.display = "flex";
+                document.getElementById("ban-timer").innerText = "解除: " + banDoc.data().until.toDate().toLocaleString();
+                return;
+            }
 
             if (!myName) {
                 await loginFlow();
@@ -137,7 +143,7 @@
                 const userRef = db.collection("users").doc(myName);
                 const doc = await userRef.get();
                 if (!doc.exists) {
-                    alert("パスワードを設定してください。");
+                    alert("セキュリティ強化のため、パスワードを設定してください。");
                     const p = prompt("新しいパスワードを入力");
                     if (!p) return location.reload();
                     await userRef.set({ pass: p, uid: myID });
@@ -165,17 +171,7 @@
             document.getElementById("display-user").innerText = myName;
         }
 
-        // --- 管理者・BAN等（変更なし） ---
-        async function checkBan() {
-            const doc = await db.collection("bans").doc(myID).get();
-            if(doc.exists && doc.data().until.toDate() > new Date()) {
-                document.getElementById("main-content").style.display = "none";
-                document.getElementById("ban-screen").style.display = "flex";
-                document.getElementById("ban-timer").innerText = "解除: " + doc.data().until.toDate().toLocaleString();
-                return true;
-            }
-            return false;
-        }
+        // --- 管理者機能・ゲームエンジン等はそのまま維持 ---
         async function openAdminMenu(tid, tname, col, docId, currentScore) {
             if(prompt("管理者パス") !== ADMIN_PASS) return;
             const action = prompt("1:削除 2:BAN 3:改ざん");
@@ -196,7 +192,6 @@
         async function addLog() { if(prompt("パス")===ADMIN_PASS) { const t = prompt("内容"); if(t) await db.collection("logs").add({text:t, date: firebase.firestore.FieldValue.serverTimestamp()}); } }
         function manualEditScore() { if(prompt("パス")===ADMIN_PASS) { const ns = prompt("改ざん", score); if(ns) { score = parseInt(ns); document.getElementById('final-score').innerText = score; } } }
 
-        // --- ゲームエンジン ---
         const container = document.getElementById('game-container'), player = document.getElementById('player');
         let score = 0, gameActive = false, timeLeft = 45, feverValue = 0, isFever = false;
         function startGame() {
@@ -235,12 +230,9 @@
         async function saveScoreToFirebase() { if(!myName) return alert("ログインしてください"); await db.collection("ranking").add({ uid: myID, name: myName, score, date: firebase.firestore.FieldValue.serverTimestamp() }); document.getElementById('scoreModal').style.display = 'none'; }
         let pt; function handleLongPress(f){ pt=setTimeout(f,800); }
         window.onmouseup=()=>clearTimeout(pt); window.ontouchend=()=>clearTimeout(pt);
-
         function move(cx) { if(!gameActive) return; const rect = container.getBoundingClientRect(); let x = cx - rect.left - (player.offsetWidth/2); if(x<0) x=0; if(x>rect.width-player.offsetWidth) x=rect.width-player.offsetWidth; player.style.left = x + 'px'; }
         container.addEventListener('mousemove', (e)=>move(e.clientX));
         container.addEventListener('touchmove', (e)=>{ e.preventDefault(); move(e.touches[0].clientX); }, {passive:false});
-
-        initAccount();
     </script>
 </body>
 </html>
