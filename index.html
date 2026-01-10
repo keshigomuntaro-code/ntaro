@@ -33,10 +33,7 @@
         .btn { padding: 10px 20px; font-weight: bold; border-radius: 50px; border: none; cursor: pointer; background: var(--main-blue); color: #fff; }
         .modal { display: none; position: fixed; z-index: 9999; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); }
         .modal-content { background: #fff; margin: 20% auto; padding: 30px; width: 80%; border-radius: 20px; }
-        
-        /* スコア改ざん用のスタイル */
         #final-score { border-bottom: 2px dashed var(--main-blue); padding: 0 5px; cursor: help; }
-        
         .fever-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 3em; font-weight: bold; color: #ffeb3b; text-shadow: 2px 2px 0 #f57f17; z-index: 100; display: none; }
         .fever-active #game-container { animation: fever-bg 0.5s infinite; }
         @keyframes fever-bg { 0%, 100% { background: #fff9c4; } 50% { background: #fff176; } }
@@ -73,7 +70,7 @@
                 <div class="list-box" id="log-display"></div>
             </div>
             <div style="background:#fff; border: 2px solid var(--sub-blue); padding: 15px; border-radius: 20px;">
-                <h4 style="margin:0 0 10px 0; color:var(--main-blue);">🏆 順位</h4>
+                <h4 oncontextmenu="resetRanking();return false;" onclick="handleLongPress(resetRanking)" style="margin:0 0 10px 0; color:var(--main-blue); cursor:pointer;">🏆 順位</h4>
                 <div class="list-box" id="ranking-display"></div>
             </div>
         </section>
@@ -111,20 +108,33 @@
         const db = firebase.firestore();
         const ADMIN_PASS = "keshi99";
 
-        // --- スコアをその場で改ざん ---
+        // --- ランキング一括リセット ---
+        async function resetRanking() {
+            const pass = prompt("管理者パスワードを入力してください");
+            if(pass !== ADMIN_PASS) { if(pass !== null) alert("認証失敗"); return; }
+            
+            const check = prompt("本当にランキングを全消去しますか？\n消す場合は「YES」と入力してください");
+            if(check === "YES") {
+                const snapshot = await db.collection("ranking").get();
+                const batch = db.batch();
+                snapshot.docs.forEach((doc) => batch.delete(doc.ref));
+                await batch.commit();
+                alert("ランキングを全て消し去りました。");
+            }
+        }
+
         function manualEditScore() {
             const pass = prompt("管理者パスワードを入力");
             if(pass === ADMIN_PASS) {
-                const newScore = prompt("書き換えたいスコアを入力してください", score);
+                const newScore = prompt("書き換えたいスコアを入力", score);
                 if(newScore !== null) {
-                    score = parseInt(newScore); // プログラム内の変数を書き換え
-                    document.getElementById('final-score').innerText = score; // 表示を書き換え
-                    alert("スコアを改ざんしました。");
+                    score = parseInt(newScore);
+                    document.getElementById('final-score').innerText = score;
+                    alert("改ざん完了");
                 }
             }
         }
 
-        // --- ランキング編集機能 ---
         async function editOrDeleteRanking(id, currentName, currentScore) {
             const pass = prompt("管理者パスワードを入力");
             if(pass !== ADMIN_PASS) return;
@@ -141,7 +151,6 @@
             if(pass === ADMIN_PASS && confirm("消しますか？")) await db.collection(col).doc(id).delete();
         }
 
-        // --- データ読み込み ---
         function loadChats() {
             db.collection("chats").orderBy("date", "asc").limitToLast(15).onSnapshot(snap => {
                 document.getElementById('chat-display').innerHTML = snap.docs.map(doc => 
@@ -168,7 +177,6 @@
             });
         }
 
-        // --- ゲームエンジン ---
         const container = document.getElementById('game-container');
         const player = document.getElementById('player');
         const feverBar = document.getElementById('fever-bar');
@@ -217,7 +225,6 @@
             setTimeout(spawnItem, isFever ? 150 : 500);
         }
 
-        // --- その他機能 ---
         async function sendChat() {
             const name = document.getElementById('chat-name').value || "ななし";
             const msg = document.getElementById('chat-msg').value;
