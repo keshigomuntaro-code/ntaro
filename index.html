@@ -10,11 +10,12 @@
         :root { --main-blue: #4A90E2; --bg-color: #f0f4f8; --text-color: #333; --accent-pink: #FF6B6B; --sub-blue: #EAF4FF; --fever-gold: #FFD700; }
         body { font-family: "Hiragino Maru Gothic Pro", "Yu Gothic", sans-serif; margin: 0; background-color: var(--bg-color); color: var(--text-color); line-height: 1.6; text-align: center; }
         header { background: linear-gradient(135deg, #fff, var(--sub-blue)); padding: 20px; border-bottom: 5px solid var(--main-blue); }
+        .account-bar { background: var(--main-blue); color: #fff; padding: 5px; font-size: 0.8em; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .user-name { font-weight: bold; text-decoration: underline; cursor: pointer; }
         .container { max-width: 800px; margin: 0 auto; padding: 15px; background: #fff; }
         section { margin-bottom: 25px; padding: 20px; border-radius: 20px; background: #fff; border: 2px solid var(--sub-blue); }
         .hero { background-color: var(--sub-blue); border: none; }
         .char-img { max-width: 140px; filter: drop-shadow(0 8px 15px rgba(0,0,0,0.1)); cursor: pointer; transition: 0.2s; }
-        .char-img:active { transform: scale(1.1); }
         .profile-text { text-align: left; background: #fff; padding: 12px; border-radius: 10px; font-size: 0.85em; margin-top: 10px; border-left: 5px solid var(--main-blue); }
         #game-section { background: var(--main-blue); color: #fff; border: none; position: relative; overflow: hidden; }
         #game-container { position: relative; width: 100%; height: 400px; background-color: var(--sub-blue); border: 4px solid #fff; border-radius: 10px; overflow: hidden; touch-action: none; cursor: none; }
@@ -24,176 +25,207 @@
         #fever-bar { width: 0%; height: 100%; background: var(--fever-gold); transition: width 0.2s; }
         .list-box { text-align: left; background: #fff; border-radius: 10px; padding: 10px; min-height: 50px; }
         .list-item { padding: 8px 10px; border-bottom: 1px solid #eee; font-size: 0.85em; display: flex; justify-content: space-between; cursor: pointer; }
-        #chat-section { border: 2px solid var(--main-blue); }
         .chat-container { text-align: left; height: 300px; overflow-y: auto; padding: 15px; background: var(--sub-blue); border-radius: 15px; margin-bottom: 10px; display: flex; flex-direction: column; }
         .chat-bubble { background: #fff; border-radius: 15px; padding: 8px 12px; margin-bottom: 8px; border: 1px solid #ddd; align-self: flex-start; max-width: 85%; word-break: break-all; font-size: 0.9em; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); cursor: pointer; }
-        .chat-name { font-size: 0.7em; color: var(--main-blue); font-weight: bold; }
+        .chat-name { font-size: 0.7em; color: var(--main-blue); font-weight: bold; cursor: help; }
         .chat-input-area { display: flex; gap: 5px; }
         .chat-input-area input { padding: 10px; border-radius: 10px; border: 1px solid #ddd; flex: 1; }
         .btn { padding: 10px 20px; font-weight: bold; border-radius: 50px; border: none; cursor: pointer; background: var(--main-blue); color: #fff; }
         .modal { display: none; position: fixed; z-index: 9999; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); }
         .modal-content { background: #fff; margin: 20% auto; padding: 30px; width: 80%; border-radius: 20px; }
-        #final-score { border-bottom: 2px dashed var(--main-blue); padding: 0 5px; cursor: help; }
+        #final-score { border-bottom: 2px dashed var(--main-blue); cursor: help; font-weight: bold; }
         .fever-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 3em; font-weight: bold; color: #ffeb3b; text-shadow: 2px 2px 0 #f57f17; z-index: 100; display: none; }
         .fever-active #game-container { animation: fever-bg 0.5s infinite; }
         @keyframes fever-bg { 0%, 100% { background: #fff9c4; } 50% { background: #fff176; } }
+        #ban-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; color: white; z-index: 10000; justify-content: center; align-items: center; flex-direction: column; text-align: center; }
     </style>
 </head>
-<body id="main-body">
-    <header><h1>消しゴムんたろう 公式</h1></header>
-    <div class="container">
-        <section class="hero">
-            <img src="image_b322c7.png" alt="んたろう" class="char-img" id="hero-click">
-            <div class="profile-text">
-                <strong>消しゴムんたろう</strong>：身を削り、間違いを消し去る孤高のヒーロー。
-            </div>
-        </section>
+<body>
+    <div id="ban-screen">
+        <h1>🚫 ACCESS DENIED</h1>
+        <p>あなたは「消しゴムんたろう」によって消し去られました。</p>
+        <p id="ban-timer" style="color: gray;"></p>
+    </div>
 
-        <section id="game-section">
-            <div id="fever-msg" class="fever-text">FEVER!!</div>
-            <div class="gauge-container"><div id="fever-bar"></div></div>
-            <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 5px;">
-                <span id="score-board">スコア: 0</span>
-                <span id="timer">あと: 45s</span>
-            </div>
-            <div id="game-container">
-                <img src="image_b322c7.png" id="player">
-                <div id="start-screen" style="position:absolute; width:100%; height:100%; background:rgba(74, 144, 226, 0.9); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:1000;">
-                    <button class="btn" style="background:#fff; color:var(--main-blue); font-size:1.5em;" onclick="startGame()">スタート</button>
+    <div id="main-content">
+        <div class="account-bar">
+            <span>👤 ようこそ: <span id="display-user" class="user-name" onclick="changeAccountName()">設定なし</span> さん</span>
+        </div>
+        <header><h1>消しゴムんたろう 公式</h1></header>
+        <div class="container">
+            <section class="hero">
+                <img src="image_b322c7.png" alt="んたろう" class="char-img" id="hero-click">
+                <div class="profile-text"><strong>消しゴムんたろう</strong>：間違いを消し去る孤高のヒーロー。</div>
+            </section>
+
+            <section id="game-section">
+                <div id="fever-msg" class="fever-text">FEVER!!</div>
+                <div class="gauge-container"><div id="fever-bar"></div></div>
+                <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 5px;">
+                    <span id="score-board">スコア: 0</span>
+                    <span id="timer">あと: 45s</span>
                 </div>
-            </div>
-        </section>
+                <div id="game-container">
+                    <img src="image_b322c7.png" id="player">
+                    <div id="start-screen" style="position:absolute; width:100%; height:100%; background:rgba(74, 144, 226, 0.9); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:1000;">
+                        <button class="btn" style="background:#fff; color:var(--main-blue); font-size:1.5em;" onclick="startGame()">スタート</button>
+                    </div>
+                </div>
+            </section>
 
-        <section style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: none; border: none; padding: 0;">
-            <div style="background:#fff; border: 2px solid var(--sub-blue); padding: 15px; border-radius: 20px;">
-                <h4 oncontextmenu="addLog();return false;" onclick="handleLongPress(addLog)" style="margin:0 0 10px 0; color:var(--main-blue); cursor:pointer;">🚀 ログ</h4>
-                <div class="list-box" id="log-display"></div>
-            </div>
-            <div style="background:#fff; border: 2px solid var(--sub-blue); padding: 15px; border-radius: 20px;">
-                <h4 oncontextmenu="resetRanking();return false;" onclick="handleLongPress(resetRanking)" style="margin:0 0 10px 0; color:var(--main-blue); cursor:pointer;">🏆 順位</h4>
-                <div class="list-box" id="ranking-display"></div>
-            </div>
-        </section>
+            <section style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: none; border: none; padding: 0;">
+                <div style="background:#fff; border: 2px solid var(--sub-blue); padding: 15px; border-radius: 20px;">
+                    <h4 oncontextmenu="addLog();return false;" onclick="handleLongPress(addLog)" style="margin:0 0 10px 0; color:var(--main-blue); cursor:pointer;">🚀 ログ</h4>
+                    <div class="list-box" id="log-display"></div>
+                </div>
+                <div style="background:#fff; border: 2px solid var(--sub-blue); padding: 15px; border-radius: 20px;">
+                    <h4 oncontextmenu="resetRanking();return false;" onclick="handleLongPress(resetRanking)" style="margin:0 0 10px 0; color:var(--main-blue); cursor:pointer;">🏆 順位</h4>
+                    <div class="list-box" id="ranking-display"></div>
+                </div>
+            </section>
 
-        <section id="chat-section">
-            <h2 style="color:var(--main-blue); margin-top:0; font-size: 1.1em;">💬 みんなの掲示板</h2>
-            <div class="chat-container" id="chat-display"></div>
-            <div class="chat-input-area">
-                <input type="text" id="chat-name" placeholder="なまえ" maxlength="8">
-                <input type="text" id="chat-msg" placeholder="んたろうに一言！" maxlength="50">
-                <button class="btn" onclick="sendChat()">送信</button>
-            </div>
-        </section>
+            <section id="chat-section">
+                <h2 style="color:var(--main-blue); margin-top:0; font-size: 1.1em;">💬 掲示板</h2>
+                <div class="chat-container" id="chat-display"></div>
+                <div class="chat-input-area">
+                    <input type="text" id="chat-msg" placeholder="んたろうに一言！" maxlength="50">
+                    <button class="btn" onclick="sendChat()">送信</button>
+                </div>
+            </section>
+        </div>
     </div>
 
     <div id="scoreModal" class="modal"><div class="modal-content">
         <h2 style="color:var(--main-blue);">終了！</h2>
         <p>最終スコア: <span id="final-score" onclick="manualEditScore()">0</span></p>
-        <p style="font-size: 0.7em; color: #999;">(スコアをクリックで修正可能)</p>
-        <input type="text" id="rankingName" placeholder="ランキング用のなまえ" maxlength="5" style="width:100%; padding:10px; margin-bottom:15px; border-radius:10px; border:1px solid #ddd; box-sizing:border-box;">
         <button class="btn" style="width:100%;" onclick="saveScoreToFirebase()">ランキング登録</button>
     </div></div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyBjhqORK7LsHZZWw_aDnVPSA_IstYqBLRw",
-            authDomain: "keshigomuuu-f5183.firebaseapp.com",
-            projectId: "keshigomuuu-f5183",
-            storageBucket: "keshigomuuu-f5183.firebasestorage.app",
-            messagingSenderId: "541731028448",
-            appId: "1:541731028448:web:512938a4ca14e61842bf85",
-            measurementId: "G-8H0QH3TMZN"
-        };
+        const firebaseConfig = { apiKey: "AIzaSyBjhqORK7LsHZZWw_aDnVPSA_IstYqBLRw", authDomain: "keshigomuuu-f5183.firebaseapp.com", projectId: "keshigomuuu-f5183", storageBucket: "keshigomuuu-f5183.firebasestorage.app", messagingSenderId: "541731028448", appId: "1:541731028448:web:512938a4ca14e61842bf85" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const ADMIN_PASS = "keshi99";
 
-        // --- ランキング一括リセット ---
-        async function resetRanking() {
-            const pass = prompt("管理者パスワードを入力してください");
-            if(pass !== ADMIN_PASS) { if(pass !== null) alert("認証失敗"); return; }
-            
-            const check = prompt("本当にランキングを全消去しますか？\n消す場合は「YES」と入力してください");
-            if(check === "YES") {
-                const snapshot = await db.collection("ranking").get();
-                const batch = db.batch();
-                snapshot.docs.forEach((doc) => batch.delete(doc.ref));
-                await batch.commit();
-                alert("ランキングを全て消し去りました。");
-            }
-        }
+        let myID = localStorage.getItem("ntaro_id") || "ID_" + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem("ntaro_id", myID);
+        let myName = localStorage.getItem("ntaro_user") || "";
+        let score = 0, gameActive = false, timeLeft = 45, feverValue = 0, isFever = false;
 
-        function manualEditScore() {
-            const pass = prompt("管理者パスワードを入力");
-            if(pass === ADMIN_PASS) {
-                const newScore = prompt("書き換えたいスコアを入力", score);
-                if(newScore !== null) {
-                    score = parseInt(newScore);
-                    document.getElementById('final-score').innerText = score;
-                    alert("改ざん完了");
+        // --- BANチェック ---
+        async function checkBan() {
+            const doc = await db.collection("bans").doc(myID).get();
+            if(doc.exists) {
+                const until = doc.data().until.toDate();
+                if(until > new Date()) {
+                    document.getElementById("main-content").style.display = "none";
+                    document.getElementById("ban-screen").style.display = "flex";
+                    document.getElementById("ban-timer").innerText = "解除まで: " + until.toLocaleString();
+                    return true;
                 }
             }
+            return false;
         }
 
-        async function editOrDeleteRanking(id, currentName, currentScore) {
-            const pass = prompt("管理者パスワードを入力");
+        // --- アカウント設定 ---
+        function initAccount() { if(!myName) changeAccountName(); else updateAccountDisplay(); }
+        function changeAccountName() {
+            const n = prompt("なまえ(5文字まで)", myName);
+            if(n) { myName = n.substring(0,5); localStorage.setItem("ntaro_user", myName); updateAccountDisplay(); }
+        }
+        function updateAccountDisplay() { document.getElementById("display-user").innerText = myName; }
+
+        // --- 管理者メニュー (BAN & 削除 & 改ざん) ---
+        async function openAdminMenu(tid, tname, col, docId, currentScore) {
+            const pass = prompt("管理者パスワード");
             if(pass !== ADMIN_PASS) return;
-            const mode = prompt("1:削除 2:改ざん");
-            if(mode === "1") await db.collection("ranking").doc(id).delete();
-            else if(mode === "2") {
-                const ns = prompt("新スコア", currentScore);
-                if(ns) await db.collection("ranking").doc(id).update({ score: parseInt(ns) });
+            
+            let menu = "操作を選んでください:\n1: 削除\n2: BAN(出禁)";
+            if(col === "ranking") menu += "\n3: スコア改ざん";
+            
+            const action = prompt(menu);
+            if(action === "1") {
+                if(confirm("本当に消去しますか？")) await db.collection(col).doc(docId).delete();
+            } else if(action === "2") {
+                const dur = prompt("期間: 1:1分 2:5分 3:1時間 4:1日 5:永久");
+                let unt = new Date();
+                if(dur==="1") unt.setMinutes(unt.getMinutes()+1);
+                else if(dur==="2") unt.setMinutes(unt.getMinutes()+5);
+                else if(dur==="3") unt.setHours(unt.getHours()+1);
+                else if(dur==="4") unt.setDate(unt.getDate()+1);
+                else if(dur==="5") unt = new Date("9999-12-31");
+                else return;
+                await db.collection("bans").doc(tid).set({until: firebase.firestore.Timestamp.fromDate(unt), name: tname});
+                alert("対象を追放しました。");
+            } else if(action === "3" && col === "ranking") {
+                const ns = prompt("新しいスコアを入力", currentScore);
+                if(ns) await db.collection("ranking").doc(docId).update({score: parseInt(ns)});
             }
         }
 
         async function deleteDoc(col, id) {
-            const pass = prompt("パスワード");
-            if(pass === ADMIN_PASS && confirm("消しますか？")) await db.collection(col).doc(id).delete();
+            if(prompt("管理者パス") === ADMIN_PASS && confirm("消去しますか？")) await db.collection(col).doc(id).delete();
         }
 
+        async function resetRanking() {
+            if(prompt("パスワード") === ADMIN_PASS && prompt("YESで全消去") === "YES") {
+                const snap = await db.collection("ranking").get();
+                const batch = db.batch();
+                snap.docs.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+            }
+        }
+
+        function manualEditScore() {
+            if(prompt("パスワード") === ADMIN_PASS) {
+                const ns = prompt("最終スコアを改ざん", score);
+                if(ns) { score = parseInt(ns); document.getElementById('final-score').innerText = score; }
+            }
+        }
+
+        // --- データ読み込み ---
         function loadChats() {
             db.collection("chats").orderBy("date", "asc").limitToLast(15).onSnapshot(snap => {
-                document.getElementById('chat-display').innerHTML = snap.docs.map(doc => 
-                    `<div class="chat-bubble" onclick="handleLongPress(()=>deleteDoc('chats','${doc.id}'))">
-                        <div class="chat-name">${doc.data().name}</div>${doc.data().msg}
-                    </div>`).join('');
+                document.getElementById('chat-display').innerHTML = snap.docs.map(doc => {
+                    const d = doc.data();
+                    return `<div class="chat-bubble">
+                        <div class="chat-name" onclick="handleLongPress(()=>openAdminMenu('${d.uid}','${d.name}','chats','${doc.id}'))">${d.name}</div>
+                        <div onclick="handleLongPress(()=>deleteDoc('chats','${doc.id}'))">${d.msg}</div>
+                    </div>`;
+                }).join('');
                 document.getElementById('chat-display').scrollTop = 9999;
             });
         }
-        function loadLogs() {
-            db.collection("logs").orderBy("date", "desc").limit(3).onSnapshot(snap => {
-                document.getElementById('log-display').innerHTML = snap.docs.map(doc => 
-                    `<div class="list-item" onclick="handleLongPress(()=>deleteDoc('logs','${doc.id}'))">・${doc.data().text}</div>`).join('');
-            });
-        }
+
         function loadRanking() {
-            db.collection("ranking").orderBy("score", "desc").orderBy("date", "desc").limit(5).onSnapshot(snap => {
+            db.collection("ranking").orderBy("score", "desc").limit(5).onSnapshot(snap => {
                 document.getElementById('ranking-display').innerHTML = snap.docs.map((doc, i) => {
                     const d = doc.data();
-                    return `<div class="list-item" onclick="handleLongPress(()=>editOrDeleteRanking('${doc.id}','${d.name}',${d.score}))">
+                    return `<div class="list-item" onclick="handleLongPress(()=>openAdminMenu('${d.uid}','${d.name}','ranking','${doc.id}',${d.score}))">
                         <span>${i+1}位:${d.name}</span><span>${d.score}</span>
                     </div>`;
                 }).join('');
             });
         }
 
+        function loadLogs() {
+            db.collection("logs").orderBy("date", "desc").limit(3).onSnapshot(snap => {
+                document.getElementById('log-display').innerHTML = snap.docs.map(doc => 
+                    `<div class="list-item" onclick="handleLongPress(()=>deleteDoc('logs','${doc.id}'))">・${doc.data().text}</div>`).join('');
+            });
+        }
+
+        // --- ゲームエンジン ---
         const container = document.getElementById('game-container');
         const player = document.getElementById('player');
-        const feverBar = document.getElementById('fever-bar');
-        const mainBody = document.getElementById('main-body');
-        const feverMsg = document.getElementById('fever-msg');
-        let score = 0, gameActive = false, timeLeft = 45, feverValue = 0, isFever = false;
-
-        document.getElementById('hero-click').addEventListener('click', () => { if(gameActive) addScore(5); });
         function startGame() {
-            gameActive = true; score = 0; timeLeft = 45; feverValue = 0; isFever = false;
+            gameActive = true; score = 0; timeLeft = 45; feverValue = 0;
             document.getElementById('start-screen').style.display = 'none';
             updateUI(); spawnItem();
-            let timerInterval = setInterval(() => {
-                timeLeft--;
-                document.getElementById('timer').innerText = `あと: ${timeLeft}s`;
+            let ti = setInterval(() => {
+                timeLeft--; document.getElementById('timer').innerText = `あと: ${timeLeft}s`;
                 if(timeLeft <= 0) {
-                    gameActive = false; clearInterval(timerInterval);
+                    gameActive = false; clearInterval(ti);
                     document.getElementById('final-score').innerText = score;
                     document.getElementById('scoreModal').style.display = 'block';
                     document.getElementById('start-screen').style.display = 'flex';
@@ -201,64 +233,61 @@
                 }
             }, 1000);
         }
-        function addScore(p) { score += p; if(!isFever) { feverValue = Math.min(100, feverValue + (p / 2)); if(feverValue >= 100) startFever(); } updateUI(); }
-        function startFever() { isFever = true; feverMsg.style.display = 'block'; mainBody.classList.add('fever-active'); player.style.width = "120px"; setTimeout(endFever, 7000); }
-        function endFever() { isFever = false; feverValue = 0; feverMsg.style.display = 'none'; mainBody.classList.remove('fever-active'); player.style.width = "60px"; updateUI(); }
-        function updateUI() { document.getElementById('score-board').innerText = `スコア: ${score}`; feverBar.style.width = feverValue + "%"; }
         function spawnItem() {
             if(!gameActive) return;
-            const item = document.createElement('div');
-            item.className = 'kusu';
+            const it = document.createElement('div'); it.className = 'kusu';
             const r = Math.random();
-            if(r < 0.15 && !isFever) item.innerText = '💣'; else if(r < 0.3) item.innerText = '⭐'; else item.innerText = '☁️';
-            item.style.left = Math.random() * (container.offsetWidth - 30) + 'px'; item.style.top = '-30px';
-            container.appendChild(item);
+            if(r<0.15 && !isFever) it.innerText = '💣'; else if(r<0.3) it.innerText = '⭐'; else it.innerText = '☁️';
+            it.style.left = Math.random() * (container.offsetWidth - 30) + 'px'; it.style.top = '-30px';
+            container.appendChild(it);
             let fall = setInterval(() => {
-                let top = parseInt(item.style.top); item.style.top = (top + (isFever?8:5)) + 'px';
-                const pR = player.getBoundingClientRect(), iR = item.getBoundingClientRect();
+                let top = parseInt(it.style.top); it.style.top = (top + (isFever?8:5)) + 'px';
+                const pR = player.getBoundingClientRect(), iR = it.getBoundingClientRect();
                 if (!(pR.top > iR.bottom || pR.bottom < iR.top || pR.left > iR.right || pR.right < iR.left)) {
-                    if(item.innerText === '💣') score = Math.max(0, score - 50); else addScore(item.innerText === '⭐' ? 30 : 10);
-                    item.remove(); clearInterval(fall);
+                    if(it.innerText === '💣') score = Math.max(0, score - 50); else addScore(it.innerText === '⭐' ? 30 : 10);
+                    it.remove(); clearInterval(fall);
                 }
-                if (top > container.offsetHeight) { item.remove(); clearInterval(fall); }
+                if (top > container.offsetHeight) { it.remove(); clearInterval(fall); }
             }, 20);
             setTimeout(spawnItem, isFever ? 150 : 500);
         }
+        function addScore(p) { score += p; if(!isFever) { feverValue = Math.min(100, feverValue + (p / 2)); if(feverValue >= 100) startFever(); } updateUI(); }
+        function startFever() { isFever = true; document.getElementById('fever-msg').style.display = 'block'; document.body.classList.add('fever-active'); player.style.width = "120px"; setTimeout(endFever, 7000); }
+        function endFever() { isFever = false; feverValue = 0; document.getElementById('fever-msg').style.display = 'none'; document.body.classList.remove('fever-active'); player.style.width = "60px"; updateUI(); }
+        function updateUI() { document.getElementById('score-board').innerText = `スコア: ${score}`; document.getElementById('fever-bar').style.width = feverValue + "%"; }
 
+        // --- アクション ---
         async function sendChat() {
-            const name = document.getElementById('chat-name').value || "ななし";
-            const msg = document.getElementById('chat-msg').value;
-            if(!msg) return;
-            await db.collection("chats").add({ name, msg, date: firebase.firestore.FieldValue.serverTimestamp() });
+            const m = document.getElementById('chat-msg').value; if(!m) return;
+            await db.collection("chats").add({ uid: myID, name: myName, msg: m, date: firebase.firestore.FieldValue.serverTimestamp() });
             document.getElementById('chat-msg').value = "";
         }
         async function saveScoreToFirebase() {
-            const name = document.getElementById('rankingName').value || "ななし";
-            await db.collection("ranking").add({ name, score, date: firebase.firestore.FieldValue.serverTimestamp() });
+            await db.collection("ranking").add({ uid: myID, name: myName, score, date: firebase.firestore.FieldValue.serverTimestamp() });
             document.getElementById('scoreModal').style.display = 'none';
         }
         async function addLog() {
             if(prompt("パスワード") === ADMIN_PASS) {
-                const t = prompt("ログ内容");
+                const t = prompt("新しいログ内容");
                 if(t) await db.collection("logs").add({text:t, date: firebase.firestore.FieldValue.serverTimestamp()});
             }
         }
-        let pressTimer;
-        function handleLongPress(f){ pressTimer=setTimeout(f,800); }
-        window.onmouseup=()=>clearTimeout(pressTimer);
-        window.ontouchend=()=>clearTimeout(pressTimer);
-        
-        function movePlayer(clientX) {
+
+        let pt; function handleLongPress(f){ pt=setTimeout(f,800); }
+        window.onmouseup=()=>clearTimeout(pt); window.ontouchend=()=>clearTimeout(pt);
+
+        function move(cx) {
             if(!gameActive) return;
             const rect = container.getBoundingClientRect();
-            let x = clientX - rect.left - (player.offsetWidth / 2);
-            if(x < 0) x = 0; if(x > rect.width - player.offsetWidth) x = rect.width - player.offsetWidth;
+            let x = cx - rect.left - (player.offsetWidth/2);
+            if(x<0) x=0; if(x>rect.width-player.offsetWidth) x=rect.width-player.offsetWidth;
             player.style.left = x + 'px';
         }
-        container.addEventListener('mousemove', (e) => movePlayer(e.clientX));
-        container.addEventListener('touchmove', (e) => { e.preventDefault(); movePlayer(e.touches[0].clientX); }, {passive: false});
+        container.addEventListener('mousemove', (e)=>move(e.clientX));
+        container.addEventListener('touchmove', (e)=>{ e.preventDefault(); move(e.touches[0].clientX); }, {passive:false});
 
-        loadChats(); loadLogs(); loadRanking();
+        // --- 起動 ---
+        checkBan().then(b => { if(!b){ initAccount(); loadChats(); loadLogs(); loadRanking(); }});
     </script>
 </body>
 </html>
