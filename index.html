@@ -10,61 +10,46 @@
         :root { --main-blue: #4A90E2; --bg-color: #f0f4f8; --text-color: #333; --sub-blue: #EAF4FF; --fever-gold: #FFD700; }
         body { font-family: "Hiragino Maru Gothic Pro", "Yu Gothic", sans-serif; margin: 0; background-color: var(--bg-color); color: var(--text-color); text-align: center; }
         header { background: #fff; padding: 15px; border-bottom: 5px solid var(--main-blue); }
-        .account-bar { background: var(--main-blue); color: #fff; padding: 8px; font-size: 0.9em; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .my-icon { width: 30px; height: 30px; border-radius: 50%; background: #eee; object-fit: cover; border: 2px solid #fff; }
+        .account-bar { background: var(--main-blue); color: #fff; padding: 8px; font-size: 0.8em; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .container { max-width: 800px; margin: 0 auto; padding: 10px; }
-        section { margin-bottom: 20px; padding: 15px; border-radius: 15px; background: #fff; border: 2px solid var(--sub-blue); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        section { margin-bottom: 15px; padding: 15px; border-radius: 15px; background: #fff; border: 2px solid var(--sub-blue); }
         
-        /* プロフィール編集 */
-        .profile-box input, .profile-box textarea { width: 100%; padding: 8px; margin: 5px 0; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; font-family: inherit; }
+        /* ログ・ランキング */
+        .list-box { text-align: left; background: #fff; border-radius: 8px; padding: 8px; height: 120px; overflow-y: auto; border: 1px solid #eee; font-size: 0.75em; }
+        .list-item { padding: 4px 0; border-bottom: 1px solid #f9f9f9; display: flex; justify-content: space-between; cursor: pointer; }
+
+        /* チャット */
+        .chat-container { text-align: left; height: 280px; overflow-y: auto; padding: 10px; background: var(--sub-blue); border-radius: 10px; }
+        .chat-bubble { display: flex; gap: 8px; background: #fff; border-radius: 10px; padding: 8px; margin-bottom: 6px; cursor: pointer; }
+        .chat-icon { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #ddd; }
+        .chat-name { font-size: 0.7em; font-weight: bold; color: var(--main-blue); }
         
         /* ゲーム */
-        #game-container { position: relative; width: 100%; height: 350px; background: var(--sub-blue); border-radius: 10px; overflow: hidden; touch-action: none; cursor: crosshair; }
-        #player { position: absolute; bottom: 10px; width: 60px; z-index: 10; pointer-events: none; }
-        .kusu { position: absolute; font-size: 30px; z-index: 5; }
+        #game-container { position: relative; width: 100%; height: 320px; background: var(--sub-blue); border-radius: 10px; overflow: hidden; touch-action: none; }
+        #player { position: absolute; bottom: 10px; width: 60px; pointer-events: none; }
+        .kusu { position: absolute; font-size: 28px; }
 
-        /* バッジ */
-        .badge { font-size: 0.7em; padding: 2px 6px; border-radius: 4px; color: white; font-weight: bold; margin-right: 5px; vertical-align: middle; }
-        .badge-admin { background: #000; color: gold; border: 1px solid gold; }
-        
-        /* チャット */
-        .chat-container { text-align: left; height: 300px; overflow-y: auto; padding: 10px; background: var(--sub-blue); border-radius: 10px; }
-        .chat-bubble { display: flex; align-items: flex-start; gap: 8px; background: #fff; border-radius: 10px; padding: 10px; margin-bottom: 8px; box-shadow: 1px 1px 3px rgba(0,0,0,0.05); }
-        .chat-icon { width: 35px; height: 35px; border-radius: 50%; background: #ddd; flex-shrink: 0; object-fit: cover; }
-        .chat-name { font-size: 0.75em; font-weight: bold; color: var(--main-blue); margin-bottom: 2px; }
-        .chat-bio { font-size: 0.7em; color: #888; margin-bottom: 4px; font-style: italic; }
-        
-        .btn { padding: 8px 15px; font-weight: bold; border-radius: 20px; border: none; cursor: pointer; background: var(--main-blue); color: #fff; }
-        
-        /* 管理パネル */
-        #admin-panel { display:none; position:fixed; bottom:0; left:0; width:100%; background:#222; color:#fff; z-index:20000; padding:15px; box-sizing:border-box; border-top: 3px solid var(--fever-gold); }
-        
-        /* BAN画面 */
-        #ban-screen { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); color:white; z-index:30000; flex-direction:column; justify-content:center; align-items:center; }
+        .btn { padding: 8px 12px; font-weight: bold; border-radius: 20px; border: none; cursor: pointer; background: var(--main-blue); color: #fff; font-size: 0.8em; }
+        #admin-panel { display:none; position:fixed; bottom:0; left:0; width:100%; background:#222; color:#fff; z-index:20000; padding:15px; box-sizing:border-box; }
+        .badge { font-size: 0.7em; padding: 1px 4px; border-radius: 3px; color: white; margin-right: 3px; }
     </style>
 </head>
 <body>
-    <div id="ban-screen">
-        <h1 style="color: red;">🚫 アクセス制限中</h1>
-        <p>不適切な行為により接続が遮断されました。</p>
-        <button class="btn" style="background:#444; margin-top:10px;" onclick="location.href='mailto:admin@example.com?subject=解除申請'">管理人に異議申し立て</button>
+    <div id="ban-screen" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:black; color:white; z-index:30000; flex-direction:column; justify-content:center; align-items:center;">
+        <h1>🚫 アクセス制限</h1><p>接続が拒否されました。</p>
+        <button class="btn" onclick="location.href='mailto:admin@example.com'">解除申請</button>
     </div>
 
     <div id="main-content">
-        <div class="account-bar">
-            <img src="" id="my-top-icon" class="my-icon" onerror="this.src='https://via.placeholder.com/50'">
-            <b><span id="display-user">ゲスト</span></b>
-            <span id="my-badge"></span>
-        </div>
-        
+        <div class="account-bar"><img src="" id="my-top-icon" style="width:25px;height:25px;border-radius:50%;"><b id="display-user">ゲスト</b><span id="my-badge"></span></div>
         <header><h1>消しゴムんたろう</h1></header>
 
         <div class="container">
-            <section class="profile-box">
-                <h4 style="margin:0 0 10px 0;">👤 プロフィール編集</h4>
-                <input type="text" id="set-icon" placeholder="アイコン画像URL">
-                <textarea id="set-bio" placeholder="自己紹介..."></textarea>
-                <button class="btn" onclick="saveProfile()">更新保存</button>
+            <section>
+                <h4>👤 プロフィール</h4>
+                <input type="text" id="set-icon" placeholder="アイコンURL" style="width:45%;">
+                <input type="text" id="set-bio" placeholder="ひとこと" style="width:45%;">
+                <button class="btn" onclick="saveProfile()">保存</button>
             </section>
 
             <section id="game-section">
@@ -73,16 +58,21 @@
                 </div>
                 <div id="game-container">
                     <img src="image_b322c7.png" id="player">
-                    <div id="start-screen" style="position:absolute; width:100%; height:100%; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:100; border-radius:10px;">
-                        <button class="btn" style="font-size:1.5em;" onclick="startGame()">START</button>
+                    <div id="start-screen" style="position:absolute; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:100;">
+                        <button class="btn" onclick="startGame()">ゲーム開始</button>
                     </div>
                 </div>
+            </section>
+
+            <section style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div>ログ<div class="list-box" id="log-display"></div></div>
+                <div>順位(長押し消去)<div class="list-box" id="ranking-display"></div></div>
             </section>
 
             <section>
                 <div class="chat-container" id="chat-display"></div>
                 <div style="display:flex; gap:5px; margin-top:10px;">
-                    <input type="text" id="chat-msg" style="flex:1; padding:10px; border-radius:10px; border:1px solid #ddd;">
+                    <input type="text" id="chat-msg" style="flex:1; padding:8px; border-radius:10px; border:1px solid #ddd;">
                     <button class="btn" onclick="sendChat()">送信</button>
                 </div>
             </section>
@@ -90,21 +80,17 @@
     </div>
 
     <div id="admin-panel">
-        <input type="text" id="target-name" placeholder="対象ユーザー名" style="width:100%; padding:8px; margin-bottom:5px;">
-        <input type="text" id="custom-title-input" placeholder="カスタム称号" style="width:100%; padding:8px; margin-bottom:10px;">
+        <input type="text" id="target-name" placeholder="ユーザー名" style="width:100%; padding:5px; margin-bottom:5px;">
         <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:5px;">
-            <button class="btn" onclick="quickTitle('管理人')" style="background:gold; color:black; font-size:0.7em;">管理人</button>
-            <button class="btn" onclick="quickTitle('消しゴムマスター')" style="background:#ff4500; font-size:0.7em;">マスター</button>
-            <button class="btn" onclick="quickTitle('消しゴム職人')" style="background:#50c878; font-size:0.7em;">職人</button>
-            <button class="btn" onclick="applyCustomTitle()" style="background:#4A90E2; font-size:0.7em;">カスタム</button>
-            <button class="btn" onclick="quickTitle('')" style="background:#666; font-size:0.7em;">称号剥奪</button>
-            <button class="btn" onclick="renameAccount()" style="background:purple; font-size:0.7em;">改名</button>
-            <button class="btn" onclick="quickBan()" style="background:red; font-size:0.7em;">IP BAN</button>
-            <button class="btn" onclick="unBan()" style="background:green; font-size:0.7em;">BAN解除</button>
-            <button class="btn" onclick="document.getElementById('admin-panel').style.display='none'" style="background:#444; font-size:0.7em;">閉じる</button>
+            <button class="btn" onclick="quickTitle('管理人')" style="background:gold; color:#000;">管理人</button>
+            <button class="btn" onclick="quickBan()" style="background:red;">IP BAN</button>
+            <button class="btn" onclick="unBan()" style="background:green;">解除</button>
+            <button class="btn" onclick="renameAccount()" style="background:purple;">改名改竄</button>
+            <button class="btn" onclick="quickTitle('')" style="background:#666;">称号剥奪</button>
+            <button class="btn" onclick="document.getElementById('admin-panel').style.display='none'">閉じる</button>
         </div>
     </div>
-    <div onclick="openAdminPanel()" style="position:fixed; bottom:0; right:0; width:40px; height:40px; opacity:0.1; z-index:9999; cursor:pointer;">⚙️</div>
+    <div onclick="openAdminPanel()" style="position:fixed; bottom:0; right:0; width:40px; height:40px; opacity:0.1; z-index:9999;">⚙️</div>
 
     <script>
         const firebaseConfig = { apiKey: "AIzaSyBjhqORK7LsHZZWw_aDnVPSA_IstYqBLRw", authDomain: "keshigomuuu-f5183.firebaseapp.com", projectId: "keshigomuuu-f5183", storageBucket: "keshigomuuu-f5183.firebasestorage.app", messagingSenderId: "541731028448", appId: "1:541731028448:web:512938a4ca14e61842bf85" };
@@ -130,106 +116,116 @@
             const d = await db.collection("users").doc(myName).get();
             if(d.exists) {
                 const data = d.data();
-                myTitle = data.title || "";
-                myIcon = data.icon || "";
-                myBio = data.bio || "";
-                document.getElementById("my-badge").innerHTML = getBadgeHTML(myTitle);
+                myTitle = data.title; myIcon = data.icon; myBio = data.bio;
                 document.getElementById("display-user").innerText = myName;
                 document.getElementById("my-top-icon").src = myIcon || "https://via.placeholder.com/50";
-                document.getElementById("set-icon").value = myIcon;
-                document.getElementById("set-bio").value = myBio;
+                document.getElementById("my-badge").innerHTML = myTitle ? `<span class="badge" style="background:black;border:1px solid gold;">${myTitle}</span>` : "";
                 await db.collection("users").doc(myName).update({ last_ip: myIP || "unknown" });
             }
         }
 
-        async function saveProfile() {
-            if(!myName) return;
-            await db.collection("users").doc(myName).update({ icon: document.getElementById("set-icon").value, bio: document.getElementById("set-bio").value });
-            alert("プロフィールを更新しました"); location.reload();
-        }
-
         async function login() {
-            let n = prompt("名前を入力"); if(!n) return;
+            let n = prompt("名前"); if(!n) return;
             const r = db.collection("users").doc(n); const d = await r.get();
             if(d.exists) {
-                if(prompt("パスワードを入力") === d.data().pass) { myName = n; localStorage.setItem("ntaro_user", n); location.reload(); }
-                else { alert("パスワードが違います"); login(); }
+                if(prompt("パスワード") === d.data().pass) { myName = n; localStorage.setItem("ntaro_user", n); location.reload(); }
+                else { alert("拒否"); login(); }
             } else {
-                let p = prompt("新規パスワードを設定"); if(p) { await r.set({pass:p, title:"", icon:"", bio:"", last_ip: myIP || ""}); myName=n; localStorage.setItem("ntaro_user", n); location.reload(); }
+                let p = prompt("新規パスワード"); if(p) { await r.set({pass:p, title:"", icon:"", bio:"", last_ip: myIP || ""}); myName=n; localStorage.setItem("ntaro_user", n); location.reload(); }
             }
         }
 
-        function getBadgeHTML(t) {
-            if(!t) return "";
-            if(t === '管理人') return '<span class="badge badge-admin">管理人</span>';
-            let color = (t === '消しゴムマスター') ? '#ff4500' : (t === '消しゴム職人' ? '#50c878' : '#4A90E2');
-            return `<span class="badge" style="background:${color}">${t}</span>`;
+        function startSync() {
+            // チャット同期（改竄・削除対応）
+            db.collection("chats").orderBy("date","desc").limit(20).onSnapshot(s => {
+                document.getElementById("chat-display").innerHTML = s.docs.map(doc => {
+                    const c = doc.data();
+                    return `<div class="chat-bubble" oncontextmenu="adminEdit('${doc.id}','chats','${c.msg}');return false;" ontouchstart="handleLongPress(()=>adminEdit('${doc.id}','chats','${c.msg}'))">
+                        <img src="${c.icon || 'https://via.placeholder.com/50'}" class="chat-icon">
+                        <div style="flex:1"><div class="chat-name">${c.name}</div><div style="font-size:0.8em;">${c.msg}</div></div>
+                    </div>`;
+                }).reverse().join('');
+                document.getElementById("chat-display").scrollTop = 999;
+            });
+            // ログ同期
+            db.collection("logs").orderBy("date","desc").limit(10).onSnapshot(s => {
+                document.getElementById("log-display").innerHTML = s.docs.map(doc => `<div>・${doc.data().text}</div>`).join('');
+            });
+            // ランキング同期
+            db.collection("ranking").orderBy("score","desc").limit(10).onSnapshot(s => {
+                document.getElementById("ranking-display").innerHTML = s.docs.map((doc, i) => `
+                <div class="list-item" oncontextmenu="adminEdit('${doc.id}','ranking');return false;" ontouchstart="handleLongPress(()=>adminEdit('${doc.id}','ranking'))">
+                    <span>${i+1}. ${doc.data().name}</span><b>${doc.data().score}</b>
+                </div>`).join('');
+            });
         }
 
-        // 管理パネル操作
-        function openAdminPanel() { if(prompt("管理者パスワード") === ADMIN_PASS) document.getElementById("admin-panel").style.display="block"; }
-
-        async function quickTitle(t) {
-            const n = document.getElementById("target-name").value;
-            if(n) { await db.collection("users").doc(n).update({title: t}); alert("称号を更新しました"); }
-        }
-
-        async function applyCustomTitle() {
-            const n = document.getElementById("target-name").value;
-            const t = document.getElementById("custom-title-input").value;
-            if(n && t) { await db.collection("users").doc(n).update({title: t}); alert("カスタム称号を付与しました"); }
-        }
-
-        async function quickBan() {
-            const n = document.getElementById("target-name").value;
-            const u = await db.collection("users").doc(n).get();
-            if(u.exists && u.data().last_ip) {
-                await db.collection("ip_bans").doc(u.data().last_ip.replace(/\./g, '_')).set({name: n, date: new Date()});
-                alert("IP BANを完了しました");
-            }
-        }
-
-        async function unBan() {
-            const n = document.getElementById("target-name").value;
-            const u = await db.collection("users").doc(n).get();
-            if(u.exists && u.data().last_ip) {
-                await db.collection("ip_bans").doc(u.data().last_ip.replace(/\./g, '_')).delete();
-                alert("解除しました");
+        async function adminEdit(id, col, oldVal) {
+            if(prompt("管理者パス") !== ADMIN_PASS) return;
+            let act = prompt("1:削除 2:改竄(編集)");
+            if(act === "1") await db.collection(col).doc(id).delete();
+            if(act === "2" && col === "chats") {
+                let newVal = prompt("内容を書き換え", oldVal);
+                if(newVal) await db.collection(col).doc(id).update({msg: newVal});
             }
         }
 
         async function renameAccount() {
             const oldN = document.getElementById("target-name").value;
-            const newN = prompt("新しい名前");
+            const newN = prompt("新しい名前に改竄");
+            const newP = prompt("新しいパスワードに改竄");
             if(oldN && newN) {
                 const d = await db.collection("users").doc(oldN).get();
-                if(d.exists) { await db.collection("users").doc(newN).set(d.data()); await db.collection("users").doc(oldN).delete(); alert("改名完了"); }
+                if(d.exists) {
+                    let data = d.data();
+                    if(newP) data.pass = newP;
+                    await db.collection("users").doc(newN).set(data);
+                    await db.collection("users").doc(oldN).delete();
+                    alert("名前と情報を改竄しました");
+                }
             }
         }
 
-        function startSync() {
-            db.collection("chats").orderBy("date","desc").limit(25).onSnapshot(s => {
-                document.getElementById("chat-display").innerHTML = s.docs.map(doc => {
-                    const c = doc.data();
-                    return `<div class="chat-bubble"><img src="${c.icon || 'https://via.placeholder.com/50'}" class="chat-icon"><div class="chat-content"><div class="chat-name">${getBadgeHTML(c.title)}${c.name}</div><div class="chat-bio">${c.bio || ''}</div><div>${c.msg}</div></div></div>`;
-                }).reverse().join('');
-                document.getElementById("chat-display").scrollTop = 9999;
-            });
+        async function saveProfile() {
+            await db.collection("users").doc(myName).update({ icon: document.getElementById("set-icon").value, bio: document.getElementById("set-bio").value });
+            alert("保存完了"); location.reload();
         }
 
         async function sendChat() {
             const m = document.getElementById("chat-msg").value;
-            if(m && myName) { await db.collection("chats").add({ name: myName, msg: m, icon: myIcon, bio: myBio, title: myTitle, date: new Date() }); document.getElementById("chat-msg").value=""; }
+            if(m && myName) { 
+                await db.collection("chats").add({ name: myName, msg: m, icon: myIcon, date: new Date() });
+                await db.collection("logs").add({ text: `${myName}が発言`, date: new Date() });
+                document.getElementById("chat-msg").value=""; 
+            }
         }
 
-        // --- GAME SYSTEM ---
+        function openAdminPanel() { if(prompt("管理者パス") === ADMIN_PASS) document.getElementById("admin-panel").style.display="block"; }
+        async function quickTitle(t) { const n = document.getElementById("target-name").value; if(n) await db.collection("users").doc(n).update({title: t}); }
+        async function quickBan() {
+            const n = document.getElementById("target-name").value;
+            const u = await db.collection("users").doc(n).get();
+            if(u.exists && u.data().last_ip) await db.collection("ip_bans").doc(u.data().last_ip.replace(/\./g, '_')).set({name: n});
+        }
+        async function unBan() {
+            const n = document.getElementById("target-name").value;
+            const u = await db.collection("users").doc(n).get();
+            if(u.exists && u.data().last_ip) await db.collection("ip_bans").doc(u.data().last_ip.replace(/\./g, '_')).delete();
+        }
+
+        // --- GAME ---
         let score = 0, gameActive = false, timeLeft = 45;
         function startGame() {
-            if(!myName) return; score = 0; timeLeft = 45; gameActive = true;
+            score = 0; timeLeft = 45; gameActive = true;
             document.getElementById("start-screen").style.display="none";
             const ti = setInterval(() => {
                 timeLeft--; document.getElementById("timer").innerText = "TIME: " + timeLeft;
-                if(timeLeft <= 0 || !gameActive) { clearInterval(ti); gameActive = false; document.getElementById("start-screen").style.display="flex"; }
+                if(timeLeft <= 0 || !gameActive) { 
+                    clearInterval(ti); gameActive = false; 
+                    db.collection("ranking").add({name: myName, score, date: new Date()});
+                    db.collection("logs").add({text: `${myName}が${score}点獲得`, date: new Date()});
+                    document.getElementById("start-screen").style.display="flex";
+                }
             }, 1000);
             spawn();
         }
@@ -245,7 +241,7 @@
                     score += (it.innerText === "💣" ? -50 : 10); document.getElementById("score-board").innerText = "SCORE: " + score;
                     it.remove(); clearInterval(fall);
                 }
-                if(t > 350) { it.remove(); clearInterval(fall); }
+                if(t > 320) { it.remove(); clearInterval(fall); }
             }, 20);
             setTimeout(spawn, myTitle === '管理人' ? 250 : 600);
         }
@@ -256,6 +252,9 @@
         }
         document.getElementById("game-container").addEventListener("mousemove", e => move(e.clientX));
         document.getElementById("game-container").addEventListener("touchmove", e => { e.preventDefault(); move(e.touches[0].clientX); }, {passive:false});
+        
+        let pressTimer; function handleLongPress(f) { pressTimer = setTimeout(f, 800); }
+        window.onmouseup = window.ontouchend = () => clearTimeout(pressTimer);
     </script>
 </body>
 </html>
