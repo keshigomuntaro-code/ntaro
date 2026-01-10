@@ -14,6 +14,11 @@
         .container { max-width: 800px; margin: 0 auto; padding: 15px; background: #fff; }
         section { margin-bottom: 25px; padding: 20px; border-radius: 20px; background: #fff; border: 2px solid var(--sub-blue); }
 
+        /* プロフィール用スタイル */
+        .hero { background-color: var(--sub-blue); border: none; }
+        .char-img { max-width: 140px; filter: drop-shadow(0 8px 15px rgba(0,0,0,0.1)); }
+        .profile-text { text-align: left; background: #fff; padding: 12px; border-radius: 10px; font-size: 0.85em; margin-top: 10px; border-left: 5px solid var(--main-blue); line-height: 1.6; }
+
         .badge { font-size: 0.75em; padding: 2px 8px; border-radius: 4px; margin-right: 5px; color: white; font-weight: bold; display: inline-block; }
         .badge-admin { background: #000; color: #ffd700 !important; border: 1px solid #ffd700; }
         .badge-master { background: #ff4500; }
@@ -47,13 +52,19 @@
     </div>
 
     <div id="main-content">
-        <div class="account-bar">
-            👤 <span id="display-user">ログイン中...</span> 
-            <span id="my-badge-area"></span>
-        </div>
-        
+        <div class="account-bar">👤 <span id="display-user">...</span> <span id="my-badge-area"></span></div>
         <div class="container">
             <header><h1>消しゴムんたろう 公式</h1></header>
+
+            <section class="hero">
+                <img src="image_b322c7.png" class="char-img">
+                <div class="profile-text">
+                    <strong>【公式プロフィール】</strong><br>
+                    ・<b>名前：</b>消しゴムんたろう<br>
+                    ・<b>正体：</b>間違いを消し去るヒーロー。<br>
+                    ・<b>特技：</b>白紙に戻すこと。身を削って働く。
+                </div>
+            </section>
             
             <section id="game-section">
                 <div id="fever-bar-container"><div id="fever-bar"></div></div>
@@ -69,12 +80,12 @@
             </section>
 
             <section>
-                <h4>🏆 順位 (管理人:長押しで即削除)</h4>
+                <h4>🏆 順位</h4>
                 <div class="list-box" id="ranking-display"></div>
             </section>
 
             <section>
-                <h4>💬 チャット (管理人:長押しで即削除)</h4>
+                <h4>💬 チャット</h4>
                 <div class="chat-container" id="chat-display"></div>
                 <div style="display: flex; gap: 5px; margin-top: 10px;">
                     <input type="text" id="chat-msg" placeholder="メッセージ..." style="padding:12px; border-radius:10px; border:1px solid #ddd; flex:1;">
@@ -85,18 +96,15 @@
     </div>
 
     <div id="admin-panel">
-        <h3 style="color:var(--fever-gold);">闇の管理パネル</h3>
+        <h3 style="color:var(--fever-gold);">Admin Panel</h3>
         <div style="background:#444; padding:10px; border-radius:5px; margin-bottom:10px;">
-            <p style="margin:0 0 5px 0;">🚩 管理者ログ入力</p>
-            <input type="text" id="adm-log-input" style="width:70%; padding:5px;">
-            <button onclick="addAdminLog()" style="padding:5px;">投稿</button>
-            <button onclick="toggleLogView()" style="width:100%; margin-top:5px;">ログ表示切替</button>
+            <input type="text" id="adm-log-input" style="width:70%; padding:5px;" placeholder="log content">
+            <button onclick="addAdminLog()" style="padding:5px;">Post</button>
+            <button onclick="toggleLogView()" style="width:100%; margin-top:5px;">Toggle Log</button>
             <div id="log-view-area"></div>
         </div>
-
         <div class="user-selector" id="user-list-target"></div>
-        <p>選択中: <b id="selected-user-name">未選択</b></p>
-
+        <p>Target: <b id="selected-user-name">none</b></p>
         <div class="adm-grid">
             <button class="adm-btn" onclick="updateTitle('管理人')" style="background:#000; color:gold;">管理人</button>
             <button class="adm-btn" onclick="updateTitle('消しゴムマスター')" style="background:#ff4500; color:#fff;">マスター</button>
@@ -105,10 +113,10 @@
             <button class="adm-btn" onclick="updateTitle('')" style="background:#eee;">なし</button>
             <button class="adm-btn" onclick="quickBan()" style="background:red; color:#fff;">追放</button>
         </div>
-        <button class="btn" onclick="document.getElementById('admin-panel').style.display='none'" style="width:100%; margin-top:20px; background:#444;">閉じる</button>
+        <button class="btn" onclick="document.getElementById('admin-panel').style.display='none'" style="width:100%; margin-top:20px; background:#444;">Close</button>
     </div>
 
-    <div onclick="openAdminPanel()" style="position:fixed; bottom:0; right:0; width:40px; height:40px; opacity:0.1; cursor:pointer;">⚙️</div>
+    <div onclick="openAdminPanel()" style="position:fixed; bottom:0; right:0; width:40px; height:40px; opacity:0; cursor:default; z-index:10000;"></div>
 
     <script>
         const firebaseConfig = { apiKey: "AIzaSyBjhqORK7LsHZZWw_aDnVPSA_IstYqBLRw", authDomain: "keshigomuuu-f5183.firebaseapp.com", projectId: "keshigomuuu-f5183", storageBucket: "keshigomuuu-f5183.firebasestorage.app", messagingSenderId: "541731028448", appId: "1:541731028448:web:512938a4ca14e61842bf85" };
@@ -123,7 +131,7 @@
         let selectedTarget = "";
 
         function getBadgeHTML(t) { 
-            if(!t || t === "") return "";
+            if(!t) return "";
             let cls = (t==='管理人'?'badge-admin':(t==='消しゴムマスター'?'badge-master':(t==='消しゴム職人'?'badge-craftsman':'badge-custom')));
             return `<span class="badge ${cls}">${t}</span>`;
         }
@@ -162,73 +170,55 @@
                 }).join('');
                 document.getElementById('chat-display').scrollTop = 9999;
             });
-
             db.collection("ranking").orderBy("score", "desc").limit(10).onSnapshot(s => { 
                 document.getElementById('ranking-display').innerHTML = s.docs.map((doc, i) => {
                     const d = doc.data();
                     return `<div class="list-item" onmousedown="startPress('${doc.id}','ranking')" ontouchstart="startPress('${doc.id}','ranking')" onmouseup="endPress()" ontouchend="endPress()">
-                        <span>${i+1}位:${getBadgeHTML(d.title)}${d.name}</span><span>${d.score}点</span></div>`;
+                        <span>${i+1}位:${getBadgeHTML(d.title)}${d.name}</span><span>${d.score}</span></div>`;
                 }).join(''); 
             });
-
             db.collection("logs").orderBy("date", "desc").limit(50).onSnapshot(s => {
                 document.getElementById('log-view-area').innerHTML = s.docs.map(doc => `<div style="border-bottom:1px solid #222; padding:5px;">・${doc.data().text}</div>`).join('');
             });
         }
 
-        // --- 管理者パスワード不要ロジック ---
         let pressTimer;
         function startPress(id, col) { 
             pressTimer = setTimeout(() => { 
-                // 管理人称号を持っていれば即座に削除、そうでなければパスワード要求
                 if (myTitle === '管理人') {
-                    if(confirm("管理権限で削除しますか？")) {
-                        db.collection(col).doc(id).delete();
-                    }
+                    if(confirm("delete?")) db.collection(col).doc(id).delete();
                 } else {
-                    if(prompt("管理者パスワード") === ADMIN_PASS) {
-                        db.collection(col).doc(id).delete();
-                        alert("消去成功");
-                    }
+                    const p = prompt("key");
+                    if(p === ADMIN_PASS) db.collection(col).doc(id).delete();
                 }
             }, 1000); 
         }
         function endPress() { clearTimeout(pressTimer); }
 
         function openAdminPanel() { 
-            // 管理人ならパスワード不要でパネルを開く
-            if (myTitle === '管理人' || prompt("管理者パスワード") === ADMIN_PASS) {
+            if (myTitle === '管理人' || prompt("key") === ADMIN_PASS) {
                 document.getElementById('admin-panel').style.display = 'block'; 
                 loadUserList(); 
             }
         }
 
         function toggleLogView() { const v = document.getElementById('log-view-area'); v.style.display = v.style.display==='block'?'none':'block'; }
-        
         async function addAdminLog() {
             const txt = document.getElementById('adm-log-input').value;
-            if(txt) { await db.collection("logs").add({text: `[管理者] ${txt}`, date: new Date()}); document.getElementById('adm-log-input').value=""; }
+            if(txt) { await db.collection("logs").add({text: txt, date: new Date()}); document.getElementById('adm-log-input').value=""; }
         }
-
         async function loadUserList() {
             const s = await db.collection("users").get();
             document.getElementById('user-list-target').innerHTML = s.docs.map(doc => `<div class="user-option" onclick="selectUser('${doc.id}')">${doc.id}</div>`).join('');
         }
         function selectUser(name) { 
-            selectedTarget = name; 
-            document.getElementById('selected-user-name').innerText = name; 
+            selectedTarget = name; document.getElementById('selected-user-name').innerText = name; 
             document.querySelectorAll('.user-option').forEach(opt => opt.classList.toggle('selected', opt.innerText === name));
         }
-        
-        async function updateTitle(t) { 
-            if(selectedTarget) {
-                await db.collection("users").doc(selectedTarget).update({title: t});
-            }
-        }
-        async function setCustomTitle() { const t = prompt("自由称号"); if(selectedTarget && t) updateTitle(t); }
-        async function quickBan() { if(selectedTarget) { const u = await db.collection("users").doc(selectedTarget).get(); await db.collection("bans").doc(u.data().uid).set({name: selectedTarget}); alert("BAN完了"); } }
+        async function updateTitle(t) { if(selectedTarget) await db.collection("users").doc(selectedTarget).update({title: t}); }
+        async function setCustomTitle() { const t = prompt("title"); if(selectedTarget && t) updateTitle(t); }
+        async function quickBan() { if(selectedTarget) { const u = await db.collection("users").doc(selectedTarget).get(); await db.collection("bans").doc(u.data().uid).set({name: selectedTarget}); } }
 
-        // --- ゲーム & チャット ---
         let score = 0, gameActive = false, timeLeft = 45, feverGauge = 0, isFever = false;
         function startGame() {
             if(!myName) return; score=0; feverGauge=0; timeLeft=45; gameActive=true; isFever=false;
@@ -273,7 +263,6 @@
         async function sendChat() { 
             const m = document.getElementById('chat-msg').value; 
             if(m && myName) {
-                // 送信時に最新のmyTitleを載せる
                 await db.collection("chats").add({uid:myID, name:myName, msg:m, title:myTitle, date: firebase.firestore.FieldValue.serverTimestamp()}); 
                 document.getElementById('chat-msg').value=""; 
             }
