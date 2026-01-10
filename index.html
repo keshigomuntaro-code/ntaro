@@ -9,44 +9,47 @@
     <style>
         :root { --main-blue: #4A90E2; --bg-color: #f0f4f8; --text-color: #333; --accent-pink: #FF6B6B; --sub-blue: #EAF4FF; --fever-gold: #FFD700; }
         body { font-family: "Hiragino Maru Gothic Pro", "Yu Gothic", sans-serif; margin: 0; background-color: var(--bg-color); color: var(--text-color); line-height: 1.6; text-align: center; }
-        header { background: linear-gradient(135deg, #fff, var(--sub-blue)); padding: 40px 20px; border-bottom: 5px solid var(--main-blue); }
-        h1 { margin: 0; color: var(--main-blue); font-size: 2.2em; }
+        header { background: linear-gradient(135deg, #fff, var(--sub-blue)); padding: 30px 20px; border-bottom: 5px solid var(--main-blue); }
+        h1 { margin: 0; color: var(--main-blue); font-size: 2em; }
         .container { max-width: 800px; margin: 0 auto; padding: 20px; background: #fff; }
-        section { margin-bottom: 30px; padding: 20px; border-radius: 20px; background: #fff; border: 1px solid #eee; }
+        
+        section { margin-bottom: 30px; padding: 20px; border-radius: 20px; background: #fff; border: 2px solid var(--sub-blue); }
+
+        /* チャットエリア */
+        #chat-section { background-color: #fff; border: 2px solid var(--main-blue); }
+        .chat-container { text-align: left; height: 300px; overflow-y: auto; padding: 15px; background: var(--sub-blue); border-radius: 15px; margin-bottom: 10px; display: flex; flex-direction: column; }
+        .chat-bubble { position: relative; background: #fff; border-radius: 15px; padding: 10px 15px; margin-bottom: 10px; border: 1px solid #ddd; display: inline-block; align-self: flex-start; max-width: 85%; word-break: break-all; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .chat-name { font-size: 0.75em; color: var(--main-blue); font-weight: bold; margin-bottom: 3px; }
+        .chat-input-area { display: flex; flex-wrap: wrap; gap: 8px; }
+        .chat-input-area input { padding: 10px; border-radius: 10px; border: 1px solid #ddd; outline: none; }
         
         /* ゲームエリア */
-        #game-section { background: var(--main-blue); color: #fff; }
+        #game-section { background: var(--main-blue); color: #fff; border: none; }
         #game-container { position: relative; width: 100%; height: 350px; background-color: var(--sub-blue); border: 4px solid #fff; border-radius: 10px; overflow: hidden; touch-action: none; }
-        #player { position: absolute; bottom: 10px; width: 50px; z-index: 10; pointer-events: none; }
+        #player { position: absolute; bottom: 10px; width: 55px; z-index: 10; pointer-events: none; }
         .kusu { position: absolute; font-size: 24px; }
 
-        /* チャット機能（吹き出しデザイン） */
-        .chat-container { text-align: left; max-height: 400px; overflow-y: auto; padding: 10px; background: var(--sub-blue); border-radius: 15px; margin-bottom: 10px; }
-        .chat-bubble { position: relative; background: #fff; border-radius: 15px; padding: 10px 15px; margin-bottom: 10px; border: 1px solid #ddd; display: inline-block; max-width: 80%; word-break: break-all; }
-        .chat-name { font-size: 0.7em; color: var(--main-blue); font-weight: bold; margin-bottom: 2px; }
-        .chat-meta { font-size: 0.6em; color: #999; margin-top: 5px; text-align: right; }
-        .chat-input-area { display: flex; gap: 5px; }
-        .chat-input-area input { flex: 1; padding: 10px; border-radius: 20px; border: 1px solid #ddd; }
-        
-        /* ボタン・パーツ */
-        .btn { padding: 10px 20px; font-weight: bold; border-radius: 50px; border: none; cursor: pointer; }
+        .btn { padding: 10px 20px; font-weight: bold; border-radius: 50px; border: none; cursor: pointer; transition: 0.2s; }
+        .btn:active { transform: scale(0.95); }
         .btn-blue { background: var(--main-blue); color: #fff; }
-        .card-list { background: #fff; border-radius: 15px; border: 2px solid var(--sub-blue); color: #333; text-align: left; }
-        .log-item { padding: 10px 15px; border-bottom: 1px solid #eee; font-size: 0.85em; }
-        .modal { display: none; position: fixed; z-index: 3000; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); }
-        .modal-content { background: #fff; margin: 20% auto; padding: 30px; width: 80%; max-width: 400px; border-radius: 20px; }
+        
+        .list-box { text-align: left; background: #fff; border-radius: 10px; padding: 10px; }
+        .list-item { padding: 8px 12px; border-bottom: 1px solid #eee; font-size: 0.9em; display: flex; justify-content: space-between; }
+        
+        .modal { display: none; position: fixed; z-index: 9999; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); }
+        .modal-content { background: #fff; margin: 20% auto; padding: 30px; width: 85%; max-width: 400px; border-radius: 20px; }
     </style>
 </head>
 <body>
     <header><h1>消しゴムんたろう 公式</h1></header>
     
     <div class="container">
-        <section>
-            <h2 style="color:var(--main-blue); margin-top:0;">💬 みんなの会話</h2>
+        <section id="chat-section">
+            <h2 style="color:var(--main-blue); margin-top:0;">💬 みんなの掲示板</h2>
             <div class="chat-container" id="chat-display">読み込み中...</div>
             <div class="chat-input-area">
-                <input type="text" id="chat-name" placeholder="名前" maxlength="8" style="width: 25%;">
-                <input type="text" id="chat-msg" placeholder="メッセージ（消し去りたい悩みなど）" maxlength="50">
+                <input type="text" id="chat-name" placeholder="なまえ" maxlength="8" style="flex: 1; min-width: 60px;">
+                <input type="text" id="chat-msg" placeholder="んたろうにメッセージ！" maxlength="50" style="flex: 3; min-width: 150px;">
                 <button class="btn btn-blue" onclick="sendChat()">送信</button>
             </div>
         </section>
@@ -56,26 +59,27 @@
             <div id="game-container">
                 <img src="image_b322c7.png" id="player">
                 <div id="start-screen" style="position:absolute; width:100%; height:100%; background:rgba(74, 144, 226, 0.8); display:flex; align-items:center; justify-content:center; z-index:100;">
-                    <button class="btn" style="background:#fff; color:var(--main-blue);" onclick="startGame()">スタート</button>
+                    <button class="btn" style="background:#fff; color:var(--main-blue); font-size: 1.2em;" onclick="startGame()">スタート！</button>
                 </div>
             </div>
+            <p id="score-board" style="font-weight:bold; margin-top:10px;">スコア: 0</p>
         </section>
 
         <section>
-            <h2 oncontextmenu="addLog();return false;" onclick="handleLongPress(addLog)" style="background:var(--main-blue); color:#fff; padding:5px 15px; border-radius:20px; font-size:0.9em; cursor:pointer;">🚀 アップデートログ</h2>
-            <div class="card-list" id="log-display"></div>
+            <h2 oncontextmenu="addLog();return false;" onclick="handleLongPress(addLog)" style="background:var(--main-blue); color:#fff; padding:5px 15px; border-radius:20px; font-size:0.9em; display:inline-block; cursor:pointer;">🚀 ログ</h2>
+            <div class="list-box" id="log-display"></div>
         </section>
 
         <section>
-            <h2 style="background:var(--main-blue); color:#fff; padding:5px 15px; border-radius:20px; font-size:0.9em;">🏆 ランキング</h2>
-            <div class="card-list" id="ranking-display"></div>
+            <h2 style="background:var(--main-blue); color:#fff; padding:5px 15px; border-radius:20px; font-size:0.9em; display:inline-block;">🏆 ランキング</h2>
+            <div class="list-box" id="ranking-display"></div>
         </section>
     </div>
 
     <div id="scoreModal" class="modal"><div class="modal-content">
-        <h2>終了！</h2><p>スコア: <span id="final-score">0</span></p>
-        <input type="text" id="rankingName" placeholder="名前" maxlength="5" style="width:90%; padding:10px; margin-bottom:10px;">
-        <button class="btn btn-blue" style="width:100%;" onclick="saveScoreToFirebase()">登録</button>
+        <h2 style="color:var(--main-blue);">終了！</h2><p>スコア: <span id="final-score" style="font-size:1.5em; font-weight:bold;">0</span></p>
+        <input type="text" id="rankingName" placeholder="なまえを入力" maxlength="5" style="width:100%; padding:12px; margin-bottom:15px; border:1px solid #ddd; border-radius:10px; box-sizing: border-box;">
+        <button class="btn btn-blue" style="width:100%;" onclick="saveScoreToFirebase()">ランキングに登録</button>
     </div></div>
 
     <script>
@@ -97,43 +101,46 @@
             const name = document.getElementById('chat-name').value || "ななし";
             const msg = document.getElementById('chat-msg').value;
             if(!msg) return;
-            await db.collection("chats").add({
-                name: name, msg: msg, date: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            document.getElementById('chat-msg').value = "";
+            try {
+                await db.collection("chats").add({
+                    name: name, msg: msg, date: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                document.getElementById('chat-msg').value = "";
+            } catch(e) { alert("送信エラー！Firebaseの設定を確認してね"); }
         }
 
         function loadChats() {
-            db.collection("chats").orderBy("date", "desc").limit(20).onSnapshot(snap => {
+            db.collection("chats").orderBy("date", "asc").limitToLast(20).onSnapshot(snap => {
                 const display = document.getElementById('chat-display');
                 display.innerHTML = snap.docs.map(doc => {
                     const data = doc.data();
                     return `<div class="chat-bubble" oncontextmenu="deleteDoc('chats','${doc.id}');return false;" onclick="handleLongPress(()=>deleteDoc('chats','${doc.id}'))">
                         <div class="chat-name">${data.name}</div>
                         <div>${data.msg}</div>
-                    </div><br>`;
-                }).join('') || "まだ会話がありません";
-                display.scrollTop = 0;
+                    </div>`;
+                }).join('') || "まだ会話がありません。";
+                display.scrollTop = display.scrollHeight;
             });
         }
 
-        // --- 共通機能 ---
+        // --- 管理者削除・ログ追加 ---
         async function deleteDoc(col, id) {
-            if(prompt("管理者パスワード") === ADMIN_PASS) {
-                if(confirm("削除しますか？")) await db.collection(col).doc(id).delete();
+            if(prompt("パスワード入力(keshi99)") === ADMIN_PASS) {
+                if(confirm("削除していい？")) await db.collection(col).doc(id).delete();
             }
         }
 
         async function addLog() {
             if(prompt("管理者パスワード") !== ADMIN_PASS) return;
-            const text = prompt("ログ内容");
+            const text = prompt("アップデート内容");
             if(text) await db.collection("logs").add({ text: text, date: firebase.firestore.FieldValue.serverTimestamp() });
         }
 
+        // --- データ読み込み ---
         function loadLogs() {
             db.collection("logs").orderBy("date", "desc").limit(5).onSnapshot(snap => {
                 document.getElementById('log-display').innerHTML = snap.docs.map(doc => 
-                    `<div class="log-item" oncontextmenu="deleteDoc('logs','${doc.id}');return false;">・${doc.data().text}</div>`
+                    `<div class="list-item" oncontextmenu="deleteDoc('logs','${doc.id}');return false;">・${doc.data().text}</div>`
                 ).join('');
             });
         }
@@ -141,7 +148,9 @@
         function loadRanking() {
             db.collection("ranking").orderBy("score", "desc").orderBy("date", "desc").limit(10).onSnapshot(snap => {
                 document.getElementById('ranking-display').innerHTML = snap.docs.map((doc, i) => 
-                    `<div class="log-item" oncontextmenu="deleteDoc('ranking','${doc.id}');return false;">${i+1}位: ${doc.data().name} (${doc.data().score}点)</div>`
+                    `<div class="list-item" oncontextmenu="deleteDoc('ranking','${doc.id}');return false;">
+                        <span>${i+1}位: ${doc.data().name}</span><span>${doc.data().score}点</span>
+                    </div>`
                 ).join('');
             });
         }
@@ -153,12 +162,13 @@
             document.getElementById('scoreModal').style.display = 'none';
         }
 
+        // スマホ長押し対応
         let pressTimer;
         function handleLongPress(func) { pressTimer = setTimeout(func, 800); }
         window.onmouseup = () => clearTimeout(pressTimer);
         window.ontouchend = () => clearTimeout(pressTimer);
 
-        // --- ゲーム ---
+        // --- ゲームエンジン ---
         const container = document.getElementById('game-container');
         const player = document.getElementById('player');
         let score = 0, gameActive = false;
@@ -171,10 +181,12 @@
             player.style.left = x + 'px';
         }
         container.addEventListener('mousemove', (e) => movePlayer(e.clientX));
+        container.addEventListener('touchstart', (e) => movePlayer(e.touches[0].clientX));
         container.addEventListener('touchmove', (e) => { e.preventDefault(); movePlayer(e.touches[0].clientX); }, {passive: false});
 
         function startGame() {
             gameActive = true; score = 0;
+            document.getElementById('score-board').innerText = "スコア: 0";
             document.getElementById('start-screen').style.display = 'none';
             spawnItem();
             setTimeout(() => {
@@ -182,7 +194,7 @@
                 document.getElementById('final-score').innerText = score;
                 document.getElementById('scoreModal').style.display = 'block';
                 document.getElementById('start-screen').style.display = 'flex';
-            }, 30000); // 30秒
+            }, 30000);
         }
 
         function spawnItem() {
@@ -195,15 +207,16 @@
             container.appendChild(item);
             let fall = setInterval(() => {
                 let top = parseInt(item.style.top);
-                item.style.top = (top + 5) + 'px';
+                item.style.top = (top + 6) + 'px';
                 const pR = player.getBoundingClientRect(), iR = item.getBoundingClientRect();
                 if (!(pR.top > iR.bottom || pR.bottom < iR.top || pR.left > iR.right || pR.right < iR.left)) {
                     score += (item.innerText === '💣' ? -30 : 10);
+                    document.getElementById('score-board').innerText = `スコア: ${score}`;
                     item.remove(); clearInterval(fall);
                 }
                 if (top > container.offsetHeight) { item.remove(); clearInterval(fall); }
             }, 20);
-            setTimeout(spawnItem, 600);
+            setTimeout(spawnItem, 500);
         }
 
         loadChats(); loadLogs(); loadRanking();
