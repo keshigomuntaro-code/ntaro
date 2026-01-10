@@ -77,7 +77,7 @@
     </div>
 
     <div id="scoreModal" class="modal"><div class="modal-content">
-        <h2>終了！</h2><p>スコア: <span id="final-score" style="font-weight:bold; cursor:help;" onclick="manualEditScore()">0</span></p>
+        <h2>終了！</h2><p>最終スコア: <span id="final-score" style="font-weight:bold; cursor:help;" onclick="manualEditScore()">0</span></p>
         <button class="btn" style="width:100%;" onclick="saveScoreToFirebase()">ランキング登録</button>
     </div></div>
 
@@ -91,14 +91,21 @@
         localStorage.setItem("ntaro_id", myID);
         let myName = localStorage.getItem("ntaro_user") || "";
 
-        // --- 初期化 & アカウント ---
         async function initAccount() {
             if (await checkBan()) return;
             if (!myName) {
                 await loginFlow();
             } else {
+                const userRef = db.collection("users").doc(myName);
+                const doc = await userRef.get();
+                if (!doc.exists) {
+                    alert("セキュリティ強化のため、パスワードを設定してください。");
+                    const p = prompt("新しいパスワードを入力");
+                    if (!p) return initAccount();
+                    await userRef.set({ pass: p, uid: myID });
+                }
                 document.getElementById("display-user").innerText = myName;
-                startLoadingData();
+                startLoadingData(); // ここでデータを読み込み！
             }
         }
 
@@ -112,16 +119,48 @@
                 const p = prompt("パスワードを入力");
                 if (p === doc.data().pass) { myName = n; } else { alert("違います"); return loginFlow(); }
             } else {
-                const p = prompt("新キャラ登録！パスワードを決めてね");
+                const p = prompt("パスワードを決めてね");
                 if (!p) return loginFlow();
                 await userRef.set({ pass: p, uid: myID });
                 myName = n;
             }
             localStorage.setItem("ntaro_user", myName);
             document.getElementById("display-user").innerText = myName;
-            startLoadingData();
+            startLoadingData(); // ログイン直後に読み込み！
         }
 
+        function startLoadingData() {
+            // チャット読み込み
+            db.collection("chats").orderBy("date", "asc").limitToLast(15).onSnapshot(snap => {
+                const html = snap.docs.map(doc => {
+                    const d = doc.data();
+                    return `<div class="chat-bubble">
+                        <div class="chat-name" onclick="handleLongPress(()=>openAdminMenu('${d.uid}','${d.name}','chats','${doc.id}'))">${d.name}</div>
+                        <div onclick="handleLongPress(()=>deleteDoc('chats','${doc.id}'))">${d.msg}</div>
+                    </div>`;
+                }).join('');
+                document.getElementById('chat-display').innerHTML = html;
+                document.getElementById('chat-display').scrollTop = 9999;
+            });
+
+            // ログ読み込み
+            db.collection("logs").orderBy("date", "desc").limit(3).onSnapshot(snap => {
+                document.getElementById('log-display').innerHTML = snap.docs.map(doc => 
+                    `<div class="list-item" onclick="handleLongPress(()=>deleteDoc('logs','${doc.id}'))">・${doc.data().text}</div>`).join('');
+            });
+
+            // ランキング読み込み
+            db.collection("ranking").orderBy("score", "desc").limit(5).onSnapshot(snap => {
+                document.getElementById('ranking-display').innerHTML = snap.docs.map((doc, i) => {
+                    const d = doc.data();
+                    return `<div class="list-item" onclick="handleLongPress(()=>openAdminMenu('${d.uid}','${d.name}','ranking','${doc.id}',${d.score}))">
+                        <span>${i+1}位:${d.name}</span><span>${d.score}</span>
+                    </div>`;
+                }).join('');
+            });
+        }
+
+        // --- 以下、管理・ゲーム機能は変更なし ---
         async function checkBan() {
             const doc = await db.collection("bans").doc(myID).get();
             if(doc.exists && doc.data().until.toDate() > new Date()) {
@@ -133,36 +172,6 @@
             return false;
         }
 
-        // --- データ同期 ---
-        function startLoadingData() {
-            // チャット
-            db.collection("chats").orderBy("date", "asc").limitToLast(15).onSnapshot(snap => {
-                document.getElementById('chat-display').innerHTML = snap.docs.map(doc => {
-                    const d = doc.data();
-                    return `<div class="chat-bubble">
-                        <div class="chat-name" onclick="handleLongPress(()=>openAdminMenu('${d.uid}','${d.name}','chats','${doc.id}'))">${d.name}</div>
-                        <div onclick="handleLongPress(()=>deleteDoc('chats','${doc.id}'))">${d.msg}</div>
-                    </div>`;
-                }).join('');
-                document.getElementById('chat-display').scrollTop = 9999;
-            });
-            // ログ
-            db.collection("logs").orderBy("date", "desc").limit(3).onSnapshot(snap => {
-                document.getElementById('log-display').innerHTML = snap.docs.map(doc => 
-                    `<div class="list-item" onclick="handleLongPress(()=>deleteDoc('logs','${doc.id}'))">・${doc.data().text}</div>`).join('');
-            });
-            // ランキング
-            db.collection("ranking").orderBy("score", "desc").limit(5).onSnapshot(snap => {
-                document.getElementById('ranking-display').innerHTML = snap.docs.map((doc, i) => {
-                    const d = doc.data();
-                    return `<div class="list-item" onclick="handleLongPress(()=>openAdminMenu('${d.uid}','${d.name}','ranking','${doc.id}',${d.score}))">
-                        <span>${i+1}位:${d.name}</span><span>${d.score}</span>
-                    </div>`;
-                }).join('');
-            });
-        }
-
-        // --- 管理者機能 ---
         async function openAdminMenu(tid, tname, col, docId, currentScore) {
             if(prompt("管理者パス") !== ADMIN_PASS) return;
             const action = prompt("1:削除 2:BAN 3:改ざん");
@@ -173,18 +182,17 @@
                 if(dur==="1") unt.setMinutes(unt.getMinutes()+1); else if(dur==="2") unt.setMinutes(unt.getMinutes()+5);
                 else if(dur==="3") unt.setHours(unt.getHours()+1); else if(dur==="4") unt = new Date("9999-12-31");
                 await db.collection("bans").doc(tid).set({until: firebase.firestore.Timestamp.fromDate(unt), name: tname});
-                alert("執行しました");
             } else if(action === "3" && col === "ranking") {
                 const ns = prompt("新スコア", currentScore);
                 if(ns) await db.collection("ranking").doc(docId).update({score: parseInt(ns)});
             }
         }
+
         async function deleteDoc(col, id) { if(prompt("管理者パス") === ADMIN_PASS && confirm("消去？")) await db.collection(col).doc(id).delete(); }
         async function resetRanking() { if(prompt("パス")===ADMIN_PASS && prompt("YESで全消去")==="YES") { const snap = await db.collection("ranking").get(); const batch = db.batch(); snap.docs.forEach(d => batch.delete(d.ref)); await batch.commit(); } }
         async function addLog() { if(prompt("パス")===ADMIN_PASS) { const t = prompt("内容"); if(t) await db.collection("logs").add({text:t, date: firebase.firestore.FieldValue.serverTimestamp()}); } }
         function manualEditScore() { if(prompt("パス")===ADMIN_PASS) { const ns = prompt("改ざん", score); if(ns) { score = parseInt(ns); document.getElementById('final-score').innerText = score; } } }
 
-        // --- ゲーム ---
         const container = document.getElementById('game-container'), player = document.getElementById('player');
         let score = 0, gameActive = false, timeLeft = 45, feverValue = 0, isFever = false;
         function startGame() {
@@ -219,8 +227,6 @@
         function startFever() { isFever = true; document.getElementById('fever-msg').style.display = 'block'; document.body.classList.add('fever-active'); player.style.width = "120px"; setTimeout(endFever, 7000); }
         function endFever() { isFever = false; feverValue = 0; document.getElementById('fever-msg').style.display = 'none'; document.body.classList.remove('fever-active'); player.style.width = "60px"; updateUI(); }
         function updateUI() { document.getElementById('score-board').innerText = `スコア: ${score}`; document.getElementById('fever-bar').style.width = feverValue + "%"; }
-
-        // --- 通信 ---
         async function sendChat() { const m = document.getElementById('chat-msg').value; if(!m) return; await db.collection("chats").add({ uid: myID, name: myName, msg: m, date: firebase.firestore.FieldValue.serverTimestamp() }); document.getElementById('chat-msg').value = ""; }
         async function saveScoreToFirebase() { await db.collection("ranking").add({ uid: myID, name: myName, score, date: firebase.firestore.FieldValue.serverTimestamp() }); document.getElementById('scoreModal').style.display = 'none'; }
         let pt; function handleLongPress(f){ pt=setTimeout(f,800); }
