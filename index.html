@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>消しゴムんたろう 真・完全版</title>
+    <title>消しゴムんたろう 真・完全版リニューアル</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
@@ -11,37 +11,42 @@
         .dark-mode { --main-blue: #333; --bg-color: #000; --text-color: #eee; --sub-blue: #1a1a1a; --fever-gold: #fff; }
 
         body { font-family: "Hiragino Maru Gothic Pro", "Yu Gothic", sans-serif; margin: 0; background-color: var(--bg-color); color: var(--text-color); text-align: center; transition: background 0.5s; overflow-x: hidden; }
-        header { background: linear-gradient(135deg, #fff, var(--sub-blue)); padding: 15px; border-bottom: 5px solid var(--main-blue); }
+        header { background: linear-gradient(135deg, #fff, var(--sub-blue)); padding: 20px; border-bottom: 5px solid var(--main-blue); }
         .dark-mode header { background: #111; border-bottom-color: #fff; }
         
         .account-bar { background: var(--main-blue); color: #fff; padding: 8px; font-size: 0.9em; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; }
         .container { max-width: 800px; margin: 0 auto; padding: 15px; }
-        section { margin-bottom: 20px; padding: 20px; border-radius: 20px; background: #fff; border: 2px solid var(--sub-blue); position: relative;}
+        section { margin-bottom: 25px; padding: 20px; border-radius: 20px; background: #fff; border: 2px solid var(--sub-blue); position: relative;}
         .dark-mode section { background: #000; border: 1px solid #444; }
 
-        /* キャラプロフィール（最上部用） */
-        .hero-top { display: flex; align-items: center; gap: 20px; text-align: left; background: white; border: 3px solid var(--main-blue); }
-        .hero-img { width: 80px; height: 80px; object-fit: contain; }
-        .hero-text { flex: 1; font-size: 0.85em; line-height: 1.4; }
+        /* キャラプロフィール */
+        .hero { display: flex; align-items: center; gap: 20px; text-align: left; }
+        .hero img { width: 80px; height: 80px; object-fit: contain; }
+        .hero-info { flex: 1; }
 
         /* ゲーム */
-        #game-container { position: relative; width: 100%; height: 300px; background-color: var(--sub-blue); border-radius: 10px; overflow: hidden; touch-action: none; }
+        #game-container { position: relative; width: 100%; height: 350px; background-color: var(--sub-blue); border-radius: 10px; overflow: hidden; touch-action: none; }
         #player { position: absolute; bottom: 10px; width: 60px; z-index: 10; pointer-events: none; left: 50%; transform: translateX(-50%); transition: 0.2s; }
         .kusu { position: absolute; font-size: 30px; z-index: 5; pointer-events: none; }
+        
+        /* ガチャ・図鑑 */
+        .gacha-panel { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 10px; }
+        .skin-card { width: 75px; padding: 10px; border: 2px solid #ddd; border-radius: 10px; cursor: pointer; font-size: 0.7em; background: #fff; color: #333; }
+        .skin-card.locked { opacity: 0.3; filter: grayscale(1); }
+        .skin-card.selected { border-color: var(--main-blue); background: var(--sub-blue); box-shadow: 0 0 10px var(--main-blue); }
 
-        /* ガチャ */
-        .gacha-panel { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 10px; }
-        .skin-card { width: 65px; padding: 8px; border: 2px solid #ddd; border-radius: 10px; cursor: pointer; font-size: 0.65em; background: #fff; }
-        .skin-card.locked { opacity: 0.4; filter: grayscale(1); }
-        .skin-card.selected { border-color: var(--main-blue); background: var(--sub-blue); border-width: 3px; }
-
-        .tab-box { display: flex; justify-content: center; gap: 8px; margin-bottom: 10px; }
-        .tab { padding: 6px 12px; border-radius: 15px; background: #ddd; cursor: pointer; font-size: 0.8em; }
+        /* 称号・バッジ */
+        .badge { font-size: 0.75em; padding: 2px 8px; border-radius: 4px; margin-right: 5px; color: white; font-weight: bold; display: inline-block; }
+        .badge-admin { background: #000; color: #ffd700 !important; border: 1px solid #ffd700; }
+        
+        .tab-box { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
+        .tab { padding: 8px 15px; border-radius: 20px; background: #ddd; cursor: pointer; font-size: 0.8em; font-weight: bold; }
         .tab.active { background: var(--main-blue); color: white; }
+
         .btn { padding: 10px 20px; font-weight: bold; border-radius: 50px; border: none; cursor: pointer; background: var(--main-blue); color: #fff; margin: 5px; }
-        .adm-panel { background: #1a1a1a; color: #00ff41; padding: 15px; font-size: 0.8em; border-radius: 15px; text-align: left; display: none; border: 1px solid #00ff41; margin-top: 10px; }
-        .editable-text:hover { outline: 2px dashed #00ff41; cursor: pointer; }
-        .chat-container { text-align: left; height: 180px; overflow-y: auto; padding: 15px; background: var(--sub-blue); border-radius: 15px; margin-bottom: 10px; }
+        .adm-panel { background: #1a1a1a; color: #00ff41; padding: 15px; font-size: 0.8em; border-radius: 15px; margin-top: 10px; text-align: left; display: none; border: 1px solid #00ff41; }
+        .editable-text:hover { outline: 2px dashed #00ff41; cursor: pointer; background: rgba(0,255,65,0.1); }
+        .chat-container { text-align: left; height: 250px; overflow-y: auto; padding: 15px; background: var(--sub-blue); border-radius: 15px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -53,13 +58,13 @@
 
         <div class="container">
             <header>
-                <h1><span class="editable-site-text" id="site_title" onclick="editSiteText('site_title')">消しゴムんたろう</span> <span id="version-title" onclick="showBanList()">公式</span></h1>
+                <h1><span class="editable-site-text" id="site_title" onclick="editSiteText('site_title')">消しゴムんたろう</span> <span id="version-title">公式</span></h1>
             </header>
-
-            <section class="hero-top">
-                <img src="image_b322c7.png" class="hero-img">
-                <div class="hero-text">
-                    <strong>【キャラ紹介】</strong><br>
+            
+            <section class="hero">
+                <img src="image_b322c7.png">
+                <div class="hero-info">
+                    <strong>【消しゴム紹介】</strong><br>
                     <span class="editable-site-text" id="profile_box" onclick="editSiteText('profile_box')">
                         間違いを消し去るヒーロー。身を削って働く、みんなの味方。
                     </span>
@@ -67,12 +72,13 @@
             </section>
 
             <section id="game-section">
-                <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-weight:bold; font-size:0.8em;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-weight:bold; font-size:0.9em;">
                     <span id="score-board">スコア: 0</span><span id="timer">残り: 45s</span>
                 </div>
                 <div id="game-container">
                     <img src="image_b322c7.png" id="player">
                     <div id="start-screen" style="position:absolute; width:100%; height:100%; background:rgba(74, 144, 226, 0.9); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:100; color:white;">
+                        <h3>モードを選択</h3>
                         <button class="btn" style="background:#50c878;" onclick="prepGame('classic')">クラシック</button>
                         <button class="btn" style="background:#ff4444;" onclick="prepGame('survival')">サバイバル</button>
                     </div>
@@ -80,8 +86,8 @@
             </section>
 
             <section>
-                <h4>🎁 ガチャ・図鑑</h4>
-                <button class="btn" onclick="drawGacha()" style="background:#f39c12; font-size:0.8em;">ガチャを回す (500KP)</button>
+                <h4>🎁 ガチャ・キャラ図鑑</h4>
+                <button class="btn" onclick="drawGacha()" style="background:#f39c12; margin-bottom:10px;">ガチャを回す (500KP)</button>
                 <div class="gacha-panel" id="skin-list"></div>
             </section>
 
@@ -90,10 +96,10 @@
                     <div class="tab active" id="tab-classic" onclick="switchTab('classic')">クラシック順位</div>
                     <div class="tab" id="tab-survival" onclick="switchTab('survival')">サバイバル順位</div>
                 </div>
-                <div id="ranking-display" style="font-size:0.9em;"></div>
+                <div id="ranking-display"></div>
                 <div id="adm-rank-tools" class="adm-panel">
-                    <b>【管理者】</b><br>
-                    <button onclick="addKP(99999)">KP付与</button>
+                    <b>【管理者特権】</b><br>
+                    <button onclick="addKP(99999)">KP増量</button>
                     <button onclick="unlockAllSkins()">全解放</button>
                     <button onclick="showUserPassList()">名簿</button>
                 </div>
@@ -101,7 +107,7 @@
 
             <section>
                 <div class="chat-container" id="chat-display"></div>
-                <div style="display:flex; gap:5px;"><input type="text" id="chat-msg" style="flex:1;"><button class="btn" onclick="sendChat()" style="padding:5px 15px;">送</button></div>
+                <div style="display:flex; gap:5px;"><input type="text" id="chat-msg" style="flex:1;"><button class="btn" onclick="sendChat()">送信</button></div>
             </section>
         </div>
     </div>
@@ -122,7 +128,9 @@
         const SKINS = {
             'normal': { name: '元祖', img: 'image_b322c7.png', rarity: 'N', color: '#666' },
             'gold': { name: '黄金', img: 'https://cdn-icons-png.flaticon.com/512/2583/2583344.png', rarity: 'SSS', color: '#ffd700' },
-            'black': { name: '黒板消し', img: 'https://cdn-icons-png.flaticon.com/512/167/167638.png', rarity: 'SR', color: '#e74c3c' }
+            'black': { name: '黒板消し', img: 'https://cdn-icons-png.flaticon.com/512/167/167638.png', rarity: 'SR', color: '#e74c3c' },
+            'sand': { name: '砂消し', img: 'https://cdn-icons-png.flaticon.com/512/2619/2619277.png', rarity: 'R', color: '#a0522d' },
+            'tape': { name: '修正テープ', img: 'https://cdn-icons-png.flaticon.com/512/3209/3209250.png', rarity: 'SR', color: '#4A90E2' }
         };
 
         window.onload = () => { initAccount(); startLoadingData(); syncConfig(); syncSiteTexts(); };
@@ -134,6 +142,7 @@
                     userData = { ...userData, ...doc.data() };
                     document.getElementById("display-user").innerText = myName;
                     document.getElementById("kp-display").innerText = userData.kp;
+                    document.getElementById("my-badge-area").innerHTML = getBadgeHTML(userData.title);
                     renderSkins(); updatePlayerSkin();
                 } else { loginFlow(); }
             });
@@ -165,7 +174,7 @@
                 const s = SKINS[key]; const locked = !userData.skins.includes(key); const selected = userData.currentSkin === key;
                 return `<div class="skin-card ${locked?'locked':''} ${selected?'selected':''}" onclick="selectSkin('${key}')">
                     <span style="color:${s.color};font-weight:bold;">${s.rarity}</span><br>
-                    <img src="${s.img}" style="width:100%;height:30px;object-fit:contain;"><br>${s.name}</div>`;
+                    <img src="${s.img}" style="width:100%;height:35px;object-fit:contain;"><br>${s.name}</div>`;
             }).join('');
         }
 
@@ -183,6 +192,7 @@
         function syncSiteTexts() { db.collection("configs").onSnapshot(s => s.forEach(d => { if(d.id!=='game_settings'){ const el=document.getElementById(d.id); if(el) el.innerHTML=d.data().text; } })); }
         async function editSiteText(id) { if(!isBackworld) return; const el=document.getElementById(id); const v=prompt("一斉編集:", el.innerHTML.replace(/<br>/g,"\n")); if(v!==null) await db.collection("configs").doc(id).set({text:v.replace(/\n/g,"<br>")}); }
 
+        // --- ゲーム ---
         let score = 0, gameActive = false, timeLeft = 45;
         function prepGame(m) { currentGameMode = m; startGame(); }
         function startGame() {
@@ -215,12 +225,13 @@
         async function finishGame() {
             document.getElementById('start-screen').style.display='flex';
             if(score > 0) {
-                await db.collection(`rank_${currentGameMode}`).add({name:myName, score, date: new Date()});
+                await db.collection(`rank_${currentGameMode}`).add({name:myName, score, title:userData.title, date: new Date()});
                 await db.collection("users").doc(myName).update({ kp: firebase.firestore.FieldValue.increment(score) });
                 alert(score + " KP獲得！");
             }
         }
 
+        // --- 管理者・称号 ---
         function toggleBackworld() {
             if (!isBackworld) {
                 if (userData.title === '管理人' || prompt("key") === ADMIN_PASS) {
@@ -231,9 +242,19 @@
                 }
             } else { location.reload(); }
         }
+        async function selectTitle(n) { if(!isBackworld) return; const t=prompt(n+"の称号を入力:"); await db.collection("users").doc(n).update({title:t}); }
+        async function addKP(v) { await db.collection("users").doc(myName).update({ kp: firebase.firestore.FieldValue.increment(v) }); }
+        async function unlockAllSkins() { await db.collection("users").doc(myName).update({ skins: Object.keys(SKINS) }); }
+        function getBadgeHTML(t) { if(!t) return ""; return `<span class="badge ${t==='管理人'?'badge-admin':''}" style="background:${t==='管理人'?'black':'#666'}">${t}</span>`; }
+        
         function startLoadingData() {
             db.collection(`rank_${currentTab}`).orderBy("score", "desc").limit(10).onSnapshot(s => {
-                document.getElementById('ranking-display').innerHTML = s.docs.map((doc, i) => `<div>${i+1}位: ${doc.data().name} - ${doc.data().score}</div>`).join('');
+                document.getElementById('ranking-display').innerHTML = s.docs.map((doc, i) => {
+                    const d = doc.data();
+                    const adminTool = isBackworld ? `<span onclick="selectTitle('${d.name}')" style="cursor:help;">[称号]</span>` : "";
+                    return `<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee;">
+                        <span>${i+1}位: ${getBadgeHTML(d.title)} ${d.name} ${adminTool}</span><b>${d.score}</b></div>`;
+                }).join('');
             });
             db.collection("chats").orderBy("date", "asc").limitToLast(10).onSnapshot(s => {
                 document.getElementById('chat-display').innerHTML = s.docs.map(doc => `<div><b>${doc.data().name}</b>: ${doc.data().msg}</div>`).join('');
