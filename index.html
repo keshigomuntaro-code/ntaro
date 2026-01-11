@@ -3,270 +3,273 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>消しゴムんたろう 真・完全版リニューアル</title>
+    <title>消しゴムんたろう 真・完全版</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
         :root { --main-blue: #4A90E2; --bg-color: #f0f4f8; --text-color: #333; --sub-blue: #EAF4FF; --fever-gold: #FFD700; }
-        .dark-mode { --main-blue: #333; --bg-color: #000; --text-color: #eee; --sub-blue: #1a1a1a; --fever-gold: #fff; }
-
-        body { font-family: "Hiragino Maru Gothic Pro", "Yu Gothic", sans-serif; margin: 0; background-color: var(--bg-color); color: var(--text-color); text-align: center; transition: background 0.5s; overflow-x: hidden; }
-        header { background: linear-gradient(135deg, #fff, var(--sub-blue)); padding: 20px; border-bottom: 5px solid var(--main-blue); }
-        .dark-mode header { background: #111; border-bottom-color: #fff; }
+        body { font-family: "Hiragino Maru Gothic Pro", "Yu Gothic", sans-serif; margin: 0; background-color: var(--bg-color); color: var(--text-color); text-align: center; }
         
-        .account-bar { background: var(--main-blue); color: #fff; padding: 8px; font-size: 0.9em; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        /* ヘッダー・アカウント */
+        .account-bar { background: var(--main-blue); color: #fff; padding: 10px; font-size: 0.85em; font-weight: bold; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .container { max-width: 800px; margin: 0 auto; padding: 15px; }
-        section { margin-bottom: 25px; padding: 20px; border-radius: 20px; background: #fff; border: 2px solid var(--sub-blue); position: relative;}
-        .dark-mode section { background: #000; border: 1px solid #444; }
+        
+        /* セクション共通 */
+        section { margin-bottom: 20px; padding: 20px; border-radius: 20px; background: #fff; border: 2px solid var(--sub-blue); position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
 
-        /* キャラプロフィール */
+        /* 消しゴムプロフィール（復活！） */
         .hero { display: flex; align-items: center; gap: 20px; text-align: left; }
-        .hero img { width: 80px; height: 80px; object-fit: contain; }
+        .hero img { width: 90px; height: 90px; object-fit: contain; }
         .hero-info { flex: 1; }
+        .hero-info b { font-size: 1.1em; color: var(--main-blue); }
 
-        /* ゲーム */
-        #game-container { position: relative; width: 100%; height: 350px; background-color: var(--sub-blue); border-radius: 10px; overflow: hidden; touch-action: none; }
-        #player { position: absolute; bottom: 10px; width: 60px; z-index: 10; pointer-events: none; left: 50%; transform: translateX(-50%); transition: 0.2s; }
+        /* ゲーム画面 */
+        #game-container { position: relative; width: 100%; height: 350px; background-color: var(--sub-blue); border-radius: 15px; overflow: hidden; border: 2px solid #ddd; cursor: none; }
+        #player { position: absolute; bottom: 10px; width: 60px; z-index: 10; pointer-events: none; }
         .kusu { position: absolute; font-size: 30px; z-index: 5; pointer-events: none; }
-        
-        /* ガチャ・図鑑 */
-        .gacha-panel { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 10px; }
-        .skin-card { width: 75px; padding: 10px; border: 2px solid #ddd; border-radius: 10px; cursor: pointer; font-size: 0.7em; background: #fff; color: #333; }
-        .skin-card.locked { opacity: 0.3; filter: grayscale(1); }
-        .skin-card.selected { border-color: var(--main-blue); background: var(--sub-blue); box-shadow: 0 0 10px var(--main-blue); }
 
-        /* 称号・バッジ */
-        .badge { font-size: 0.75em; padding: 2px 8px; border-radius: 4px; margin-right: 5px; color: white; font-weight: bold; display: inline-block; }
-        .badge-admin { background: #000; color: #ffd700 !important; border: 1px solid #ffd700; }
-        
-        .tab-box { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
-        .tab { padding: 8px 15px; border-radius: 20px; background: #ddd; cursor: pointer; font-size: 0.8em; font-weight: bold; }
-        .tab.active { background: var(--main-blue); color: white; }
+        /* リスト・カード */
+        .grid-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 10px; }
+        .card { width: 85px; padding: 10px; border: 2px solid #ddd; border-radius: 12px; cursor: pointer; font-size: 0.65em; background: #fff; transition: 0.2s; }
+        .card.selected { border-color: var(--main-blue); background: var(--sub-blue); border-width: 3px; transform: scale(1.05); }
 
-        .btn { padding: 10px 20px; font-weight: bold; border-radius: 50px; border: none; cursor: pointer; background: var(--main-blue); color: #fff; margin: 5px; }
-        .adm-panel { background: #1a1a1a; color: #00ff41; padding: 15px; font-size: 0.8em; border-radius: 15px; margin-top: 10px; text-align: left; display: none; border: 1px solid #00ff41; }
-        .editable-text:hover { outline: 2px dashed #00ff41; cursor: pointer; background: rgba(0,255,65,0.1); }
-        .chat-container { text-align: left; height: 250px; overflow-y: auto; padding: 15px; background: var(--sub-blue); border-radius: 15px; margin-bottom: 10px; }
+        /* チャット（吹き出し復活！） */
+        .chat-container { text-align: left; height: 280px; overflow-y: auto; padding: 15px; background: #f0f2f5; border-radius: 15px; margin-bottom: 10px; }
+        .chat-bubble { display: inline-block; background: #fff; border-radius: 15px; padding: 8px 15px; margin-bottom: 10px; max-width: 80%; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.05); clear: both; float: left; }
+        .chat-bubble.mine { background: #DCF8C6; float: right; }
+        .chat-bubble b { display: block; font-size: 0.7em; color: var(--main-blue); margin-bottom: 2px; }
+
+        /* ボタン・管理パネル */
+        .btn { padding: 10px 20px; font-weight: bold; border-radius: 50px; border: none; cursor: pointer; background: var(--main-blue); color: #fff; }
+        .adm-panel { background: #1a1a1a; color: #00ff41; padding: 15px; font-size: 0.8em; border-radius: 15px; display: none; text-align: left; border: 1px solid #00ff41; margin-bottom: 20px; }
+        .badge { font-size: 0.75em; padding: 2px 6px; border-radius: 4px; color: white; margin-right: 5px; background: #666; font-weight: bold; }
+        .badge-admin { background: #000; color: #ffd700; border: 1px solid #ffd700; }
     </style>
 </head>
 <body>
-    <div id="main-content">
-        <div class="account-bar" onclick="changeMyName()">
-            👤 <span id="display-user">...</span> <span id="my-badge-area"></span>
-            <span style="margin-left:auto;">💰 <span id="kp-display">0</span> KP</span>
-        </div>
-
-        <div class="container">
-            <header>
-                <h1><span class="editable-site-text" id="site_title" onclick="editSiteText('site_title')">消しゴムんたろう</span> <span id="version-title">公式</span></h1>
-            </header>
-            
-            <section class="hero">
-                <img src="image_b322c7.png">
-                <div class="hero-info">
-                    <strong>【消しゴム紹介】</strong><br>
-                    <span class="editable-site-text" id="profile_box" onclick="editSiteText('profile_box')">
-                        間違いを消し去るヒーロー。身を削って働く、みんなの味方。
-                    </span>
-                </div>
-            </section>
-
-            <section id="game-section">
-                <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-weight:bold; font-size:0.9em;">
-                    <span id="score-board">スコア: 0</span><span id="timer">残り: 45s</span>
-                </div>
-                <div id="game-container">
-                    <img src="image_b322c7.png" id="player">
-                    <div id="start-screen" style="position:absolute; width:100%; height:100%; background:rgba(74, 144, 226, 0.9); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:100; color:white;">
-                        <h3>モードを選択</h3>
-                        <button class="btn" style="background:#50c878;" onclick="prepGame('classic')">クラシック</button>
-                        <button class="btn" style="background:#ff4444;" onclick="prepGame('survival')">サバイバル</button>
-                    </div>
-                </div>
-            </section>
-
-            <section>
-                <h4>🎁 ガチャ・キャラ図鑑</h4>
-                <button class="btn" onclick="drawGacha()" style="background:#f39c12; margin-bottom:10px;">ガチャを回す (500KP)</button>
-                <div class="gacha-panel" id="skin-list"></div>
-            </section>
-
-            <section>
-                <div class="tab-box">
-                    <div class="tab active" id="tab-classic" onclick="switchTab('classic')">クラシック順位</div>
-                    <div class="tab" id="tab-survival" onclick="switchTab('survival')">サバイバル順位</div>
-                </div>
-                <div id="ranking-display"></div>
-                <div id="adm-rank-tools" class="adm-panel">
-                    <b>【管理者特権】</b><br>
-                    <button onclick="addKP(99999)">KP増量</button>
-                    <button onclick="unlockAllSkins()">全解放</button>
-                    <button onclick="showUserPassList()">名簿</button>
-                </div>
-            </section>
-
-            <section>
-                <div class="chat-container" id="chat-display"></div>
-                <div style="display:flex; gap:5px;"><input type="text" id="chat-msg" style="flex:1;"><button class="btn" onclick="sendChat()">送信</button></div>
-            </section>
-        </div>
+    <div id="ban-screen" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:black; color:red; z-index:100000; justify-content:center; align-items:center; flex-direction:column;">
+        <h1>ACCESS DENIED</h1><p>追放されました。</p>
     </div>
+
+    <div class="account-bar">
+        <div onclick="changeMyName()">👤 <span id="my-badge-area"></span><span id="display-user">...</span></div>
+        <div>💰 <span id="kp-display">0</span> KP</div>
+    </div>
+
+    <div class="container">
+        <header><h1>消しゴムんたろう <span style="font-size:0.4em; opacity:0.5;">完全復活版</span></h1></header>
+
+        <section class="hero">
+            <img src="image_b322c7.png" id="hero-img">
+            <div class="hero-info">
+                <b>消しゴム紹介</b><br>
+                <span>間違いを消し去るヒーロー。身を削って働く、みんなの味方。</span>
+            </div>
+        </section>
+
+        <section id="adm-panel" class="adm-panel">
+            <b>【運営管理ツール】</b><hr>
+            対象: <select id="adm-user-select"></select><br>
+            称号: <select id="adm-title-select">
+                <option value="新人">新人</option>
+                <option value="神">神 (スコア3倍)</option>
+                <option value="スピードスター">スピードスター (速)</option>
+                <option value="鉄壁">鉄壁 (無敵)</option>
+                <option value="管理人">管理人 (最強)</option>
+            </select>
+            <button onclick="admGiveTitle()">付与</button>
+            <button onclick="admBan()" style="background:red;">IP BAN</button>
+            <button onclick="addKP(100000)">+10万KP</button>
+        </section>
+
+        <section id="game-section">
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-weight:bold; font-size:0.9em;">
+                <span id="score-board">スコア: 0</span>
+                <span id="timer">残り: 45s</span>
+            </div>
+            <div id="game-container">
+                <img src="image_b322c7.png" id="player">
+                <div id="start-screen" style="position:absolute; width:100%; height:100%; background:rgba(255,255,255,0.8); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:100;">
+                    <button class="btn" onclick="startGame()">ゲーム開始</button>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h4>🎁 特性ガチャ (500KP)</h4>
+            <button class="btn" onclick="drawGacha()" style="background:#f39c12; width:100%; margin-bottom:15px;">ガチャを回す</button>
+            <div class="grid-list" id="skin-list"></div>
+        </section>
+
+        <section>
+            <h4>🏷️ 称号一覧（バフ適用）</h4>
+            <div class="grid-list" id="title-list"></div>
+        </section>
+
+        <section>
+            <h4>💬 掲示板</h4>
+            <div class="chat-container" id="chat-display"></div>
+            <div style="display:flex; gap:5px;"><input type="text" id="chat-msg" style="flex:1; padding:10px; border-radius:10px; border:1px solid #ddd;"><button class="btn" onclick="sendChat()">送信</button></div>
+        </section>
+    </div>
+
     <div onclick="toggleBackworld()" style="position:fixed; bottom:0; right:0; width:40px; height:40px; opacity:0; z-index:10000;"></div>
 
     <script>
         const firebaseConfig = { apiKey: "AIzaSyBjhqORK7LsHZZWw_aDnVPSA_IstYqBLRw", authDomain: "keshigomuuu-f5183.firebaseapp.com", projectId: "keshigomuuu-f5183", storageBucket: "keshigomuuu-f5183.firebasestorage.app", messagingSenderId: "541731028448", appId: "1:541731028448:web:512938a4ca14e61842bf85" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        const ADMIN_PASS = "keshi99";
 
-        let myID = localStorage.getItem("ntaro_id") || "ID_" + Math.random().toString(36).substr(2, 9);
-        localStorage.setItem("ntaro_id", myID);
         let myName = localStorage.getItem("ntaro_user") || "";
-        let userData = { kp: 0, skins: ['normal'], currentSkin: 'normal', title: '' };
-        let isBackworld = false, currentTab = 'classic', currentGameMode = 'classic', config = { speed: 6 };
+        let userData = { kp: 0, skins: ['normal'], titles: ['新人'], currentSkin: 'normal', currentTitle: '新人', ip: "" };
+        let gameActive = false, score = 0, myIp = "";
 
         const SKINS = {
-            'normal': { name: '元祖', img: 'image_b322c7.png', rarity: 'N', color: '#666' },
-            'gold': { name: '黄金', img: 'https://cdn-icons-png.flaticon.com/512/2583/2583344.png', rarity: 'SSS', color: '#ffd700' },
-            'black': { name: '黒板消し', img: 'https://cdn-icons-png.flaticon.com/512/167/167638.png', rarity: 'SR', color: '#e74c3c' },
-            'sand': { name: '砂消し', img: 'https://cdn-icons-png.flaticon.com/512/2619/2619277.png', rarity: 'R', color: '#a0522d' },
-            'tape': { name: '修正テープ', img: 'https://cdn-icons-png.flaticon.com/512/3209/3209250.png', rarity: 'SR', color: '#4A90E2' }
+            'normal': { name: '元祖', filter: 'none' },
+            'red': { name: '紅', filter: 'hue-rotate(300deg) saturate(2)' },
+            'blue': { name: '蒼', filter: 'hue-rotate(180deg)' },
+            'gold': { name: '黄金', filter: 'sepia(1) saturate(10) brightness(1.2)' }
         };
 
-        window.onload = () => { initAccount(); startLoadingData(); syncConfig(); syncSiteTexts(); };
+        const TITLE_BUFFS = {
+            '神': { scoreMult: 3, speed: 1 },
+            'スピードスター': { scoreMult: 1, speed: 2 },
+            '鉄壁': { scoreMult: 1, speed: 1, invincible: true },
+            '管理人': { scoreMult: 5, speed: 2, invincible: true },
+            '新人': { scoreMult: 1, speed: 1 }
+        };
 
-        async function initAccount() {
-            if (!myName) return loginFlow();
-            db.collection("users").doc(myName).onSnapshot(doc => {
-                if(doc.exists) {
-                    userData = { ...userData, ...doc.data() };
-                    document.getElementById("display-user").innerText = myName;
-                    document.getElementById("kp-display").innerText = userData.kp;
-                    document.getElementById("my-badge-area").innerHTML = getBadgeHTML(userData.title);
-                    renderSkins(); updatePlayerSkin();
-                } else { loginFlow(); }
-            });
+        window.onload = async () => {
+            const res = await fetch('https://api.ipify.org?format=json');
+            const data = await res.json(); myIp = data.ip;
+            checkBan();
+            if(!myName) login(); else init();
+        };
+
+        async function checkBan() {
+            const snap = await db.collection("banlist").doc(myIp).get();
+            if(snap.exists) document.getElementById("ban-screen").style.display = "flex";
         }
 
-        async function loginFlow() {
+        async function login() {
             let n = prompt("名前を入力"); if(!n) return;
             const r = db.collection("users").doc(n), d = await r.get();
-            if(d.exists) { if(prompt("パスワード")===d.data().pass) myName=n; else return loginFlow(); }
-            else { let p=prompt("新規パス"); if(p){ await r.set({pass:p, uid:myID, kp:0, skins:['normal'], currentSkin:'normal', title:''}); myName=n; } }
-            localStorage.setItem("ntaro_user", myName); location.reload();
+            if(d.exists) { if(prompt("パスワード")===d.data().pass) { myName=n; init(); } else login(); }
+            else { let p=prompt("新規パスワード"); await r.set({pass:p, kp:0, skins:['normal'], titles:['新人'], currentSkin:'normal', currentTitle:'新人', ip: myIp}); myName=n; init(); }
+            localStorage.setItem("ntaro_user", myName);
         }
 
-        async function changeMyName() {
-            if(isBackworld) return;
-            const newName = prompt("新しい名前:", myName);
-            if(!newName || newName === myName) return;
-            const check = await db.collection("users").doc(newName).get();
-            if(check.exists) return alert("使用済みです");
-            const data = (await db.collection("users").doc(myName).get()).data();
-            await db.collection("users").doc(newName).set(data);
-            await db.collection("users").doc(myName).delete();
-            myName = newName; localStorage.setItem("ntaro_user", myName); location.reload();
+        function init() {
+            db.collection("users").doc(myName).onSnapshot(doc => {
+                userData = doc.data();
+                document.getElementById("display-user").innerText = myName;
+                document.getElementById("kp-display").innerText = userData.kp.toLocaleString();
+                document.getElementById("my-badge-area").innerHTML = `<span class="badge ${userData.currentTitle==='管理人'?'badge-admin':''}">${userData.currentTitle}</span>`;
+                renderSkins(); renderTitles();
+            });
+            loadChat();
+            db.collection("users").onSnapshot(s => {
+                document.getElementById("adm-user-select").innerHTML = s.docs.map(d => `<option value="${d.id}">${d.id}</option>`).join('');
+            });
         }
 
-        function renderSkins() {
-            const list = document.getElementById('skin-list');
-            list.innerHTML = Object.keys(SKINS).map(key => {
-                const s = SKINS[key]; const locked = !userData.skins.includes(key); const selected = userData.currentSkin === key;
-                return `<div class="skin-card ${locked?'locked':''} ${selected?'selected':''}" onclick="selectSkin('${key}')">
-                    <span style="color:${s.color};font-weight:bold;">${s.rarity}</span><br>
-                    <img src="${s.img}" style="width:100%;height:35px;object-fit:contain;"><br>${s.name}</div>`;
-            }).join('');
-        }
+        // マウス操作
+        const container = document.getElementById('game-container');
+        const player = document.getElementById('player');
+        container.addEventListener('mousemove', (e) => {
+            if(!gameActive) return;
+            const rect = container.getBoundingClientRect();
+            let x = e.clientX - rect.left - (player.offsetWidth / 2);
+            x = Math.max(0, Math.min(x, rect.width - player.offsetWidth));
+            player.style.left = x + 'px';
+        });
 
-        async function selectSkin(key) { if(userData.skins.includes(key)) await db.collection("users").doc(myName).update({ currentSkin: key }); }
-        function updatePlayerSkin() { document.getElementById('player').src = SKINS[userData.currentSkin]?.img || SKINS.normal.img; }
-
-        async function drawGacha() {
-            if(userData.kp < 500) return alert("500KP必要");
-            await db.collection("users").doc(myName).update({ kp: userData.kp - 500 });
-            const keys = Object.keys(SKINS); const res = keys[Math.floor(Math.random()*keys.length)];
-            alert("結果: " + SKINS[res].name);
-            await db.collection("users").doc(myName).update({ skins: firebase.firestore.FieldValue.arrayUnion(res) });
-        }
-
-        function syncSiteTexts() { db.collection("configs").onSnapshot(s => s.forEach(d => { if(d.id!=='game_settings'){ const el=document.getElementById(d.id); if(el) el.innerHTML=d.data().text; } })); }
-        async function editSiteText(id) { if(!isBackworld) return; const el=document.getElementById(id); const v=prompt("一斉編集:", el.innerHTML.replace(/<br>/g,"\n")); if(v!==null) await db.collection("configs").doc(id).set({text:v.replace(/\n/g,"<br>")}); }
-
-        // --- ゲーム ---
-        let score = 0, gameActive = false, timeLeft = 45;
-        function prepGame(m) { currentGameMode = m; startGame(); }
         function startGame() {
-            score=0; timeLeft=(currentGameMode==='survival'?999:45); gameActive=true;
-            document.getElementById('start-screen').style.display='none';
-            const timerInt = setInterval(() => {
-                if(currentGameMode==='classic') { timeLeft--; document.getElementById('timer').innerText=`残り: ${timeLeft}s`; }
-                if(timeLeft<=0 || !gameActive) { clearInterval(timerInt); gameActive=false; finishGame(); }
-            }, 1000);
+            score = 0; gameActive = true;
+            document.getElementById('start-screen').style.display = 'none';
             spawnLoop();
         }
-        function spawnLoop() { if(!gameActive) return; spawnItem(); setTimeout(spawnLoop, 500); }
-        function spawnItem() {
-            const it = document.createElement('div'); it.className='kusu'; const r = Math.random();
-            it.innerText = (r < 0.2) ? '💣' : (r < 0.5 ? '⭐' : '☁️');
-            it.style.left = Math.random()*(document.getElementById('game-container').offsetWidth-40)+'px'; it.style.top = '-40px';
-            document.getElementById('game-container').appendChild(it);
-            let fallInt = setInterval(() => {
-                if(!gameActive) { it.remove(); clearInterval(fallInt); return; }
-                let t = parseInt(it.style.top); it.style.top = (t + config.speed) + 'px';
-                const pR = document.getElementById('player').getBoundingClientRect(), iR = it.getBoundingClientRect();
-                if (!(pR.top > iR.bottom || pR.bottom < iR.top || pR.left > iR.right || pR.right < iR.left)) {
-                    if(it.innerText === '💣') { if(currentGameMode==='survival') gameActive=false; else score = Math.max(0, score-50); }
-                    else { score += (it.innerText==='⭐'?30:10); }
-                    document.getElementById('score-board').innerText = "スコア: " + score; it.remove(); clearInterval(fallInt);
-                }
-                if (t > 400) { it.remove(); clearInterval(fallInt); }
-            }, 20);
-        }
-        async function finishGame() {
-            document.getElementById('start-screen').style.display='flex';
-            if(score > 0) {
-                await db.collection(`rank_${currentGameMode}`).add({name:myName, score, title:userData.title, date: new Date()});
-                await db.collection("users").doc(myName).update({ kp: firebase.firestore.FieldValue.increment(score) });
-                alert(score + " KP獲得！");
-            }
+
+        function spawnLoop() {
+            if(!gameActive) return;
+            spawnItem();
+            setTimeout(spawnLoop, 600);
         }
 
-        // --- 管理者・称号 ---
-        function toggleBackworld() {
-            if (!isBackworld) {
-                if (userData.title === '管理人' || prompt("key") === ADMIN_PASS) {
-                    isBackworld = true; document.body.classList.add('dark-mode');
-                    document.getElementById('adm-rank-tools').style.display = "block";
-                    document.getElementById('version-title').innerText = "裏";
-                    document.querySelectorAll('.editable-site-text').forEach(e => e.classList.add('editable-text'));
+        function spawnItem() {
+            const it = document.createElement('div'); it.className = 'kusu';
+            it.innerText = (Math.random() < 0.15) ? '💣' : (Math.random() < 0.45 ? '⭐' : '☁️');
+            it.style.left = Math.random() * (container.offsetWidth - 30) + 'px';
+            it.style.top = '-40px';
+            container.appendChild(it);
+
+            const buff = TITLE_BUFFS[userData.currentTitle] || {speed:1, scoreMult:1};
+            let fall = setInterval(() => {
+                if(!gameActive) { it.remove(); clearInterval(fall); return; }
+                let t = parseInt(it.style.top); it.style.top = (t + (5 * buff.speed)) + 'px';
+                
+                const pR = player.getBoundingClientRect(), iR = it.getBoundingClientRect();
+                if (!(pR.top > iR.bottom || pR.bottom < iR.top || pR.left > iR.right || pR.right < iR.left)) {
+                    if(it.innerText === '💣' && !buff.invincible) { gameActive = false; alert("GAME OVER"); document.getElementById('start-screen').style.display='flex'; }
+                    else if(it.innerText === '⭐') { score += 30 * buff.scoreMult; }
+                    document.getElementById('score-board').innerText = "スコア: " + score;
+                    it.remove(); clearInterval(fall);
                 }
-            } else { location.reload(); }
+                if(t > 400) { it.remove(); clearInterval(fall); }
+            }, 20);
         }
-        async function selectTitle(n) { if(!isBackworld) return; const t=prompt(n+"の称号を入力:"); await db.collection("users").doc(n).update({title:t}); }
+
+        // 管理系
+        function toggleBackworld() { if(prompt("裏コード")==="keshi99") document.getElementById('adm-panel').style.display='block'; }
+        async function admGiveTitle() {
+            const target = document.getElementById("adm-user-select").value;
+            const title = document.getElementById("adm-title-select").value;
+            await db.collection("users").doc(target).update({ titles: firebase.firestore.FieldValue.arrayUnion(title) });
+            alert("付与完了");
+        }
+        async function admBan() {
+            const target = document.getElementById("adm-user-select").value;
+            const snap = await db.collection("users").doc(target).get();
+            if(snap.exists) await db.collection("banlist").doc(snap.data().ip).set({ banned: true });
+        }
         async function addKP(v) { await db.collection("users").doc(myName).update({ kp: firebase.firestore.FieldValue.increment(v) }); }
-        async function unlockAllSkins() { await db.collection("users").doc(myName).update({ skins: Object.keys(SKINS) }); }
-        function getBadgeHTML(t) { if(!t) return ""; return `<span class="badge ${t==='管理人'?'badge-admin':''}" style="background:${t==='管理人'?'black':'#666'}">${t}</span>`; }
-        
-        function startLoadingData() {
-            db.collection(`rank_${currentTab}`).orderBy("score", "desc").limit(10).onSnapshot(s => {
-                document.getElementById('ranking-display').innerHTML = s.docs.map((doc, i) => {
-                    const d = doc.data();
-                    const adminTool = isBackworld ? `<span onclick="selectTitle('${d.name}')" style="cursor:help;">[称号]</span>` : "";
-                    return `<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee;">
-                        <span>${i+1}位: ${getBadgeHTML(d.title)} ${d.name} ${adminTool}</span><b>${d.score}</b></div>`;
-                }).join('');
-            });
-            db.collection("chats").orderBy("date", "asc").limitToLast(10).onSnapshot(s => {
-                document.getElementById('chat-display').innerHTML = s.docs.map(doc => `<div><b>${doc.data().name}</b>: ${doc.data().msg}</div>`).join('');
-                document.getElementById('chat-display').scrollTop = 999;
-            });
+
+        // スキン・称号
+        function renderSkins() {
+            document.getElementById('skin-list').innerHTML = Object.keys(SKINS).map(k => {
+                const s = SKINS[k]; const locked = !userData.skins.includes(k);
+                return `<div class="card ${locked?'locked':''} ${userData.currentSkin===k?'selected':''}" onclick="setSkin('${k}')">
+                    <img src="image_b322c7.png" style="width:40px; filter:${s.filter}"><br><b>${s.name}</b></div>`;
+            }).join('');
+            player.style.filter = SKINS[userData.currentSkin].filter;
+            document.getElementById('hero-img').style.filter = SKINS[userData.currentSkin].filter;
         }
-        function syncConfig() { db.collection("configs").doc("game_settings").onSnapshot(doc => { if(doc.exists) config = doc.data(); }); }
-        function switchTab(m) { currentTab = m; document.getElementById('tab-classic').className = m==='classic'?'tab active':'tab'; document.getElementById('tab-survival').className = m==='survival'?'tab active':'tab'; startLoadingData(); }
-        async function sendChat() { const m = document.getElementById('chat-msg').value; if(m) { await db.collection("chats").add({name:myName, msg:m, date: new Date()}); document.getElementById('chat-msg').value=""; } }
-        function move(cx) { if(!gameActive) return; const r = document.getElementById('game-container').getBoundingClientRect(); document.getElementById('player').style.left = (cx - r.left - 30) + 'px'; }
-        document.getElementById('game-container').addEventListener('mousemove', (e)=>move(e.clientX));
-        document.getElementById('game-container').addEventListener('touchmove', (e)=>{e.preventDefault(); move(e.touches[0].clientX);}, {passive:false});
+        async function setSkin(k) { if(userData.skins.includes(k)) await db.collection("users").doc(myName).update({ currentSkin: k }); }
+        
+        function renderTitles() {
+            document.getElementById('title-list').innerHTML = userData.titles.map(t => {
+                return `<div class="card ${userData.currentTitle===t?'selected':''}" style="width:auto; min-width:80px;" onclick="setTitle('${t}')">${t}</div>`;
+            }).join('');
+        }
+        async function setTitle(t) { await db.collection("users").doc(myName).update({ currentTitle: t }); }
+
+        async function drawGacha() {
+            if(userData.kp < 500) return alert("KP不足");
+            await db.collection("users").doc(myName).update({ kp: userData.kp - 500 });
+            const keys = Object.keys(SKINS); const res = keys[Math.floor(Math.random()*keys.length)];
+            await db.collection("users").doc(myName).update({ skins: firebase.firestore.FieldValue.arrayUnion(res) });
+            alert("獲得しました！");
+        }
+
+        // チャット
+        function loadChat() { db.collection("chats").orderBy("date","asc").limitToLast(15).onSnapshot(s => {
+            document.getElementById('chat-display').innerHTML = s.docs.map(d => {
+                const isMine = d.data().name === myName ? 'mine' : '';
+                return `<div class="chat-bubble ${isMine}"><b>${d.data().name}</b>${d.data().msg}</div>`;
+            }).join('');
+            document.getElementById('chat-display').scrollTop = 999;
+        });}
+        async function sendChat() { const m = document.getElementById('chat-msg').value; if(m){ await db.collection("chats").add({name:myName, msg:m, date:new Date()}); document.getElementById('chat-msg').value=""; } }
     </script>
 </body>
 </html>
