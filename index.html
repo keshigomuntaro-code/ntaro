@@ -44,6 +44,7 @@
         .dark-mode .btn { background: #fff; color: #000; }
         .char-img { max-width: 120px; }
         .dark-mode .char-img { filter: grayscale(1) invert(1); }
+        .logout-btn { background: #ff4444; color: white; border: none; padding: 2px 8px; border-radius: 5px; font-size: 0.7em; cursor: pointer; margin-left: 10px; }
     </style>
 </head>
 <body>
@@ -52,9 +53,12 @@
     </div>
 
     <div id="main-content">
-        <div class="account-bar">👤 <span id="display-user">...</span> <span id="my-badge-area"></span></div>
+        <div class="account-bar">
+            👤 <span id="display-user">...</span> <span id="my-badge-area"></span>
+            <button id="logout-area" class="logout-btn" style="display:none;" onclick="logout()">ログアウト</button>
+        </div>
         <div class="container">
-            <header><h1><span class="editable-site-text" id="site_title" onclick="editSiteText('site_title')">消しゴムんたろう</span> <span id="version-title" onclick="showBanList()">公式</span></h1></header>
+            <header><h1><span class="editable-site-text" id="site_title" onclick="showUserPassList()">消しゴムんたろう</span> <span id="version-title" onclick="showBanList()">公式</span></h1></header>
             
             <section class="hero">
                 <img src="image_b322c7.png" class="char-img">
@@ -136,6 +140,21 @@
             localStorage.setItem("ntaro_user", myName); location.reload(); 
         }
 
+        function logout() {
+            localStorage.removeItem("ntaro_user");
+            location.reload();
+        }
+
+        async function showUserPassList() {
+            if (!isBackworld) return;
+            const snap = await db.collection("users").get();
+            let list = "【全ユーザー・パスワード一覧】\n\n";
+            snap.forEach(doc => {
+                list += `名前: ${doc.id} / パス: ${doc.data().pass}\n`;
+            });
+            alert(list);
+        }
+
         function syncSiteTexts() {
             db.collection("configs").onSnapshot(snap => {
                 snap.forEach(doc => {
@@ -215,7 +234,6 @@
             document.getElementById('fever-bar').style.background = isFever ? "linear-gradient(90deg, gold, white, gold)" : "var(--fever-gold)";
         }
         
-        // --- 管理ツール ---
         async function selectTitle(targetName) {
             const choice = prompt("称号を選択:\n1: 管理人\n2: 消しゴムマスター\n3: 消しゴム職人\n4: なし\n5: 自由入力");
             let t = "";
@@ -245,12 +263,14 @@
                 if (myTitle === '管理人' || prompt("key") === ADMIN_PASS) {
                     isBackworld = true; document.body.classList.add('dark-mode');
                     document.getElementById('version-title').innerText = "裏";
+                    document.getElementById('logout-area').style.display = "inline-block";
                     document.querySelectorAll('.editable-site-text').forEach(e => e.classList.add('editable-text'));
                     startLoadingData();
                 }
             } else {
                 isBackworld = false; document.body.classList.remove('dark-mode');
                 document.getElementById('version-title').innerText = "公式";
+                document.getElementById('logout-area').style.display = "none";
                 document.querySelectorAll('.editable-site-text').forEach(e => e.classList.remove('editable-text'));
                 startLoadingData();
             }
