@@ -3,101 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>消しゴムんたろう 実験版２</title>
+    <title>消しゴムんたろう 完全版</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
-        :root { --main-blue: #4A90E2; --bg-color: #f0f4f8; --text-color: #333; --sub-blue: #EAF4FF; --fever-gold: #FFD700; --adm-green: #00ff41; --adm-red: #ff3333; }
-        .dark-mode { --bg-color: #050505; --text-color: var(--adm-green); --sub-blue: #111; }
-
-        body { font-family: "Hiragino Maru Gothic Pro", sans-serif; margin: 0; background-color: var(--bg-color); color: var(--text-color); transition: 0.5s; overflow-x: hidden; }
-        .account-bar { background: var(--main-blue); color: #fff; padding: 12px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        .container { max-width: 800px; margin: 0 auto; padding: 15px; }
+        :root { --main-blue: #4A90E2; --bg-color: #f0f4f8; --text-color: #333; --adm-green: #00ff41; --adm-red: #ff4444; --fever-gold: #FFD700; }
+        .dark-mode { --bg-color: #050505; --text-color: var(--adm-green); }
+        body { font-family: "Hiragino Maru Gothic Pro", sans-serif; margin: 0; background-color: var(--bg-color); color: var(--text-color); transition: 0.5s; text-align: center; overflow-x: hidden; }
         
-        section { margin-bottom: 25px; padding: 20px; border-radius: 20px; background: #fff; border: 2px solid var(--sub-blue); }
-        .dark-mode section { background: #000; border-color: var(--adm-green); box-shadow: 0 0 15px rgba(0,255,65,0.1); }
+        /* ヘッダー・プロフィール */
+        .account-bar { background: var(--main-blue); color: #fff; padding: 10px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .hero-section { background: #fff; margin: 10px; padding: 15px; border-radius: 20px; display: flex; align-items: center; gap: 15px; text-align: left; border: 1px solid #ddd; }
+        .dark-mode .hero-section { background: #111; border-color: var(--adm-green); }
+        .hero-img { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--main-blue); }
 
-        /* 裏世界：改ざん司令室 */
-        #adm-console { display: none; background: #000; color: var(--adm-green); border: 3px solid var(--adm-green); border-radius: 20px; padding: 20px; margin-bottom: 30px; font-family: 'Courier New', monospace; text-align: left; }
-        .adm-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
-        .adm-box { border: 1px solid var(--adm-green); padding: 15px; border-radius: 10px; }
-        .adm-input { background: #000; border: 1px solid var(--adm-green); color: var(--adm-green); width: 100%; padding: 8px; margin-bottom: 10px; }
-        .adm-btn { background: var(--adm-green); color: #000; border: none; padding: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 5px; }
-        .adm-btn.danger { background: var(--adm-red); color: white; }
+        .container { max-width: 600px; margin: 0 auto; padding: 0 10px; }
+        section { margin-bottom: 20px; padding: 15px; border-radius: 20px; background: #fff; border: 1px solid #ddd; }
+        .dark-mode section { background: #000; border-color: var(--adm-green); }
 
-        /* 改ざん可能テキストの装飾 */
-        .editable-active { outline: 2px dashed var(--adm-green); cursor: pointer; }
-        .editable-active:hover { background: rgba(0, 255, 65, 0.1); }
+        /* フィーバーゲージ */
+        #fever-container { width: 100%; height: 12px; background: #eee; border-radius: 6px; margin-bottom: 10px; overflow: hidden; border: 1px solid #ccc; }
+        #fever-bar { width: 0%; height: 100%; background: var(--fever-gold); transition: 0.1s; }
+        .fever-active #fever-bar { background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00); animation: rainbow 0.5s infinite; }
+        @keyframes rainbow { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
 
-        /* ゲーム・チャット */
-        #game-container { position: relative; width: 100%; height: 350px; background-color: var(--sub-blue); border-radius: 15px; overflow: hidden; touch-action: none; border: 2px solid #ddd; }
-        #player { position: absolute; bottom: 10px; width: 60px; z-index: 10; pointer-events: none; transform: translateX(-50%); }
-        .chat-container { text-align: left; height: 300px; overflow-y: auto; padding: 15px; background: #f8f9fa; border-radius: 15px; display: flex; flex-direction: column; }
-        .dark-mode .chat-container { background: #000; border: 1px solid var(--adm-green); }
-        .chat-bubble { background: #fff; border-radius: 15px; padding: 10px; margin-bottom: 10px; max-width: 85%; color: #333; position: relative; }
-        .dark-mode .chat-bubble { background: #1a1a1a; color: var(--adm-green); }
-        
-        .adm-del-btn { position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; border: none; cursor: pointer; display: none; }
-        .badge { font-size: 0.7em; padding: 2px 8px; border-radius: 4px; color: white; margin-right: 5px; background: #666; font-weight: bold; }
-        .badge-admin { background: #000; color: #ffd700 !important; border: 1px solid #ffd700; }
+        /* ゲーム画面 */
+        #game-container { position: relative; width: 100%; height: 350px; background-color: #fff; border-radius: 15px; overflow: hidden; touch-action: none; border: 2px solid #ddd; }
+        .dark-mode #game-container { background: #000; border-color: var(--adm-green); }
+        #player { position: absolute; bottom: 15px; width: 55px; z-index: 10; pointer-events: none; transform: translateX(-50%); }
+        .falling { position: absolute; font-size: 30px; z-index: 5; pointer-events: none; }
+
+        /* 裏世界：司令室 */
+        #adm-console { display: none; background: #000; color: var(--adm-green); border: 2px solid var(--adm-green); padding: 15px; border-radius: 15px; margin-bottom: 20px; text-align: left; font-family: monospace; }
+        .adm-btn { background: var(--adm-green); color: #000; border: none; padding: 6px; cursor: pointer; width: 100%; margin-top: 5px; font-weight: bold; border-radius: 5px; }
+
+        .log-area { text-align: left; height: 140px; overflow-y: auto; background: #f9f9f9; padding: 10px; border-radius: 10px; font-size: 0.85em; border: 1px solid #eee; }
+        .dark-mode .log-area { background: #111; border-color: var(--adm-green); }
     </style>
 </head>
 <body>
 
-<div id="ban-screen" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:black; color:red; z-index:100000; justify-content:center; align-items:center;"><h1>🚫 ACCESS DENIED</h1></div>
-
 <div class="account-bar">
     <div>👤 <span id="my-badge-area"></span><span id="display-user">ゲスト</span></div>
-    <button onclick="logout()" style="background:none; border:1px solid #fff; color:#fff; padding:4px; cursor:pointer;">ログアウト</button>
+    <button onclick="logout()" style="background:none; border:1px solid #fff; color:#fff; border-radius:5px; font-size:12px;">ログアウト</button>
+</div>
+
+<div class="hero-section">
+    <img src="image_b322c7.png" class="hero-img">
+    <div>
+        <b id="hero-name">消しゴムんたろう</b><br>
+        <span id="hero-bio" style="font-size:0.8em; color:#666;">間違いを消し去る孤高の戦士。</span>
+    </div>
 </div>
 
 <div class="container">
-    <h1 id="site-title" class="editable-text" onclick="editStaticText('site-title')">消しゴムんたろう</h1>
-
     <section id="adm-console">
-        <h2 style="color:white; border-bottom: 2px solid var(--adm-green);">OVERRIDE COMMAND</h2>
-        <div class="adm-grid">
-            <div class="adm-box">
-                <b>👤 ユーザー改ざん</b><br><br>
-                対象: <select id="adm-user-select" class="adm-input"></select>
-                新称号: <input type="text" id="adm-title-input" class="adm-input" placeholder="神 / 運営 / 囚人">
-                <button class="adm-btn" onclick="admApplyTitle()">称号を強制書き換え</button>
-                <button class="adm-btn danger" onclick="admBanUser()">永久追放(BAN)</button>
-            </div>
-            <div class="adm-box">
-                <b>🛠 システム介入</b><br><br>
-                <button class="adm-btn" onclick="showUserPassList()">🔑 全パスワード閲覧</button>
-                <button class="adm-btn" onclick="showBanList()">🚫 BANリスト解除</button>
-                <button class="adm-btn danger" onclick="resetRank()">🗑 ランキング全消去</button>
-                速度: <input type="range" id="adm-speed-range" min="2" max="25" onchange="admUpdateConfig()">
-            </div>
+        <div style="border-bottom:1px solid var(--adm-green);">OVERRIDE TERMINAL</div>
+        <div style="margin-top:10px; font-size:12px;">
+            対象: <select id="adm-user-select" style="background:#000; color:var(--adm-green);"></select>
+            <input type="text" id="adm-title-input" placeholder="神" style="width:60px;">
+            <button class="adm-btn" onclick="admApplyTitle()">称号改ざん実行</button>
+            <button class="adm-btn" style="background:var(--fever-gold)" onclick="forceFever()">強制フィーバー発動</button>
+            <button class="adm-btn" style="background:var(--adm-red); color:white;" onclick="toggleInvincible()">無敵モード: <span id="inv-status">OFF</span></button>
         </div>
-        <p style="font-size:10px; color:#666; margin-top:10px;">※ランキングのスコアやテキストを直接クリックで改ざん可能です。</p>
     </section>
 
     <section id="game-section">
+        <div id="fever-container"><div id="fever-bar"></div></div>
+        <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:14px; margin-bottom:5px;">
+            <span id="score-board">Score: 0</span>
+            <span id="timer">30s</span>
+        </div>
         <div id="game-container">
             <img src="image_b322c7.png" id="player">
-            <div id="start-screen" style="position:absolute; width:100%; height:100%; background:rgba(74, 144, 226, 0.8); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:100; gap:10px;">
-                <button style="padding:15px 30px; border-radius:50px; border:none; background:#50c878; color:white; font-weight:bold;" onclick="startGame()">ゲーム開始</button>
+            <div id="start-screen" style="position:absolute; inset:0; background:rgba(74,144,226,0.9); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:100; color:white;">
+                <h2 style="margin:0;">消しゴムんたろう</h2>
+                <p style="font-size:12px;">☁️(+10) / 🌟(高得点) / 💣(減点)</p>
+                <button onclick="startGame()" style="padding:12px 35px; border-radius:50px; border:none; background:#fff; font-weight:bold; color:var(--main-blue); cursor:pointer;">START</button>
             </div>
         </div>
-        <div style="display:flex; justify-content:space-between; font-weight:bold; margin-top:10px;">
-            <span id="score-board">スコア: 0</span><span id="timer">準備完了</span>
-        </div>
     </section>
 
     <section>
-        <h4 id="rank-head" class="editable-text" onclick="editStaticText('rank-head')">🏆 世界ランキング</h4>
-        <div id="ranking-display"></div>
+        <h4 style="margin:0 0 10px 0;">🏆 世界ランキング</h4>
+        <div id="ranking-display" class="log-area"></div>
     </section>
 
     <section>
-        <h4 id="chat-head" class="editable-text" onclick="editStaticText('chat-head')">💬 ログ（チャット）</h4>
-        <div class="chat-container" id="chat-display"></div>
-        <div style="display:flex; gap:5px; margin-top:10px;">
-            <input type="text" id="chat-msg" style="flex:1; padding:10px; border-radius:10px; border:1px solid #ddd;">
-            <button onclick="sendChat()" style="padding:10px 20px; background:var(--main-blue); color:white; border:none; border-radius:10px;">送信</button>
+        <h4 style="margin:0 0 5px 0;">💬 チャット</h4>
+        <div id="chat-display" class="log-area"></div>
+        <div style="display:flex; gap:5px; margin-top:5px;">
+            <input type="text" id="chat-msg" placeholder="メッセージ" style="flex:1; padding:8px; border-radius:5px; border:1px solid #ddd;">
+            <button onclick="sendChat()" style="padding:8px; background:var(--main-blue); color:white; border:none; border-radius:5px;">送信</button>
         </div>
     </section>
 </div>
@@ -112,114 +109,168 @@
     let myID = localStorage.getItem("ntaro_id") || "ID_" + Math.random().toString(36).substr(2, 9);
     localStorage.setItem("ntaro_id", myID);
     let myName = localStorage.getItem("ntaro_user") || "";
-    let userData = { title: '新人', uid: myID };
-    let isBackworld = false, sysConfig = { speed: 6 };
+    let userData = { title: '新人' };
+    let isPlaying = false, score = 0, isBackworld = false, fever = 0, isFeverMode = false, isInvincible = false;
 
     window.onload = () => { if(!myName) login(); else init(); };
 
     async function login() {
-        let n = prompt("名前"); if(!n) return;
+        let n = prompt("ユーザー名を入力"); if(!n) return;
         const r = db.collection("users").doc(n), d = await r.get();
         if(d.exists) { if(prompt("パスワード")===d.data().pass) { myName=n; init(); } else login(); }
-        else { let p = prompt("新規パスワード"); await r.set({pass:p, title:'新人', uid:myID}); myName=n; init(); }
+        else { let p = prompt("新規パスワード設定"); await r.set({pass:p, title:'新人', uid:myID}); myName=n; init(); }
         localStorage.setItem("ntaro_user", myName);
     }
 
     async function init() {
-        const b = await db.collection("bans").doc(myID).get();
-        if(b.exists) { document.body.innerHTML = "<h1>BAN</h1>"; return; }
-
         db.collection("users").doc(myName).onSnapshot(doc => {
             if(!doc.exists) return;
             userData = doc.data();
             document.getElementById("display-user").innerText = myName;
-            document.getElementById("my-badge-area").innerHTML = `<span class="badge ${userData.title==='管理人'?'badge-admin':''}">${userData.title}</span>`;
-            document.getElementById("player").style.width = (userData.title==='管理人') ? "150px" : "60px";
+            document.getElementById("my-badge-area").innerHTML = `<span style="font-size:10px; padding:2px 5px; background:#666; color:white; border-radius:3px; margin-right:5px; vertical-align:middle;">${userData.title}</span>`;
         });
-
         db.collection("users").onSnapshot(s => {
             document.getElementById("adm-user-select").innerHTML = s.docs.map(d => `<option value="${d.id}">${d.id}</option>`).join('');
         });
-
-        startLoadingData();
-        syncStaticTexts();
+        syncData();
     }
 
-    function startLoadingData() {
-        db.collection("rank_classic").orderBy("score", "desc").limit(10).onSnapshot(s => {
-            document.getElementById('ranking-display').innerHTML = s.docs.map((doc, i) => {
-                const d = doc.data();
-                // スコア改ざんイベント
-                const scoreEv = isBackworld ? `onclick="tamperScore('${doc.id}', ${d.score})"` : "";
-                return `<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee;">
-                    <span>${i+1}位: ${d.name}</span>
-                    <b ${scoreEv} style="cursor:pointer;">${d.score}</b>
-                </div>`;
-            }).join('');
-        });
+    // --- ゲーム処理 (完全版) ---
+    const player = document.getElementById("player");
+    const container = document.getElementById("game-container");
+    let px = 50;
 
-        db.collection("chats").orderBy("date", "asc").limitToLast(15).onSnapshot(s => {
-            document.getElementById('chat-display').innerHTML = s.docs.map(doc => {
-                const d = doc.data();
-                const delBtn = isBackworld ? `<button class="adm-del-btn" style="display:block" onclick="deleteChat('${doc.id}')">×</button>` : "";
-                return `<div class="chat-bubble"><b>${d.name}</b>: ${d.msg}${delBtn}</div>`;
-            }).join('');
+    container.addEventListener("touchmove", e => { if(!isPlaying) return; px = (e.touches[0].clientX / window.innerWidth) * 100; updatePlayerPos(); });
+    container.addEventListener("mousemove", e => { if(!isPlaying) return; px = (e.offsetX / container.offsetWidth) * 100; updatePlayerPos(); });
+    function updatePlayerPos() { 
+        if(px < 5) px = 5; if(px > 95) px = 95;
+        player.style.left = px + "%"; 
+    }
+
+    function startGame() {
+        isPlaying = true; score = 0; fever = 0; isFeverMode = false;
+        document.getElementById("start-screen").style.display = "none";
+        document.getElementById("fever-container").classList.remove("fever-active");
+        updateUI();
+        let timeLeft = 30;
+        
+        const timerInt = setInterval(() => {
+            if(!isPlaying) { clearInterval(timerInt); return; }
+            timeLeft--;
+            document.getElementById("timer").innerText = timeLeft + "s";
+            
+            if(timeLeft <= 0) {
+                isPlaying = false; clearInterval(timerInt);
+                document.getElementById("start-screen").style.display = "flex";
+                document.getElementById("start-screen").innerHTML = `<h2>FINISH!</h2><p>Score: ${score}</p><button onclick="location.reload()" style="padding:12px 35px; border-radius:50px; border:none; background:#fff; font-weight:bold; color:var(--main-blue); cursor:pointer;">RETRY</button>`;
+                saveScore(score);
+            }
+
+            // アイテム生成頻度調整
+            let spawnRate = isFeverMode ? 0.6 : 0.3;
+            if(Math.random() < spawnRate) {
+                let r = Math.random();
+                if(r < 0.08) createItem("🌟"); // 星
+                else if(r < 0.25) createItem("💣"); // 爆弾
+                else createItem("☁️"); // 雲
+            }
+        }, 100);
+    }
+
+    function createItem(type) {
+        const item = document.createElement("div");
+        item.className = "falling"; item.innerText = type;
+        item.style.left = Math.random() * 90 + "%";
+        item.style.top = "-40px";
+        if(type === "🌟") item.style.filter = "drop-shadow(0 0 8px gold)";
+        container.appendChild(item);
+
+        let top = -40;
+        const fallInt = setInterval(() => {
+            if(!isPlaying) { clearInterval(fallInt); item.remove(); return; }
+            top += isFeverMode ? 10 : 6;
+            item.style.top = top + "px";
+            
+            const pRect = player.getBoundingClientRect();
+            const iRect = item.getBoundingClientRect();
+
+            if(iRect.top > pRect.top - 20 && iRect.left > pRect.left - 25 && iRect.left < pRect.right + 25) {
+                if(type === "☁️") {
+                    score += isFeverMode ? 50 : 10;
+                    if(!isFeverMode) {
+                        fever = Math.min(100, fever + 8);
+                        if(fever >= 100) startFever();
+                    }
+                } else if(type === "🌟") {
+                    score += 500; // 星は高得点
+                    fever = Math.min(100, fever + 20);
+                } else {
+                    if(!isInvincible) {
+                        score = Math.max(0, score - 50);
+                        fever = 0;
+                        container.style.background = "#ffcccc";
+                        setTimeout(() => container.style.background = isBackworld ? "#000" : "#fff", 150);
+                    }
+                }
+                updateUI(); clearInterval(fallInt); item.remove();
+            }
+            if(top > 400) { clearInterval(fallInt); item.remove(); }
+        }, 30);
+    }
+
+    function startFever() {
+        isFeverMode = true;
+        document.getElementById("fever-container").classList.add("fever-active");
+        let fLimit = 100;
+        const fInt = setInterval(() => {
+            fLimit -= 1.5; fever = fLimit;
+            updateUI();
+            if(fLimit <= 0 || !isPlaying) {
+                isFeverMode = false; fever = 0;
+                document.getElementById("fever-container").classList.remove("fever-active");
+                clearInterval(fInt);
+            }
+        }, 100);
+    }
+
+    function updateUI() {
+        document.getElementById("score-board").innerText = "Score: " + score;
+        document.getElementById("fever-bar").style.width = fever + "%";
+    }
+
+    // --- 管理・同期機能 ---
+    function toggleBackworld() {
+        if(!isBackworld && (userData.title==='管理人' || prompt("ADMIN KEY")==='keshi99')) {
+            isBackworld = true; document.body.classList.add('dark-mode');
+            document.getElementById('adm-console').style.display = 'block';
+        } else if(isBackworld) { location.reload(); }
+    }
+    function forceFever() { if(isPlaying) startFever(); }
+    function toggleInvincible() {
+        isInvincible = !isInvincible;
+        document.getElementById("inv-status").innerText = isInvincible ? "ON" : "OFF";
+        player.style.filter = isInvincible ? "drop-shadow(0 0 10px #00ff41)" : "none";
+    }
+    async function admApplyTitle() {
+        const target = document.getElementById("adm-user-select").value;
+        const title = document.getElementById("adm-title-input").value;
+        await db.collection("users").doc(target).update({title: title});
+        alert("反映完了");
+    }
+    function syncData() {
+        db.collection("rank_classic").orderBy("score", "desc").limit(10).onSnapshot(s => {
+            document.getElementById('ranking-display').innerHTML = s.docs.map((doc, i) => `<div style="padding:3px 0; border-bottom:1px solid #eee;">${i+1}. ${doc.id}: ${doc.data().score}</div>`).join('');
+        });
+        db.collection("chats").orderBy("date", "asc").limitToLast(10).onSnapshot(s => {
+            document.getElementById('chat-display').innerHTML = s.docs.map(doc => `<div><b>${doc.data().name}</b>: ${doc.data().msg}</div>`).join('');
             document.getElementById('chat-display').scrollTop = 999;
         });
     }
-
-    // --- 改ざん・管理アクション ---
-    function toggleBackworld() {
-        if(!isBackworld && (userData.title==='管理人' || prompt("ADMIN KEY")==='keshi99')) {
-            isBackworld = true;
-            document.body.classList.add('dark-mode');
-            document.getElementById('adm-console').style.display = 'block';
-            document.querySelectorAll('.editable-text').forEach(el => el.classList.add('editable-active'));
-            startLoadingData(); // ボタン再描画用
-        } else if(isBackworld) {
-            location.reload();
-        }
+    async function saveScore(s) {
+        const ref = db.collection("rank_classic").doc(myName);
+        const d = await ref.get();
+        if(!d.exists || s > d.data().score) await ref.set({score: s});
     }
-
-    async function tamperScore(docId, oldScore) {
-        if(!isBackworld) return;
-        const newScore = prompt("新スコアを入力:", oldScore);
-        if(newScore !== null) await db.collection("rank_classic").doc(docId).update({score: Number(newScore)});
-    }
-
-    async function deleteChat(id) { if(confirm("消去しますか？")) await db.collection("chats").doc(id).delete(); }
-
-    async function editStaticText(id) {
-        if(!isBackworld) return;
-        const newText = prompt("表示テキスト改ざん:", document.getElementById(id).innerText);
-        if(newText) await db.collection("configs").doc(id).set({text: newText});
-    }
-
-    async function admApplyTitle() {
-        const target = document.getElementById('adm-user-select').value;
-        const title = document.getElementById('adm-title-input').value;
-        await db.collection("users").doc(target).update({title: title});
-        alert("改ざん完了");
-    }
-
-    async function admBanUser() {
-        const target = document.getElementById('adm-user-select').value;
-        const u = await db.collection("users").doc(target).get();
-        await db.collection("bans").doc(u.data().uid).set({name: target});
-        alert(target + " を封印しました");
-    }
-
-    async function showUserPassList() {
-        const s = await db.collection("users").get();
-        alert(s.docs.map(d => `${d.id}: ${d.data().pass}`).join("\n"));
-    }
-
-    function syncStaticTexts() {
-        db.collection("configs").onSnapshot(s => s.forEach(d => { if(document.getElementById(d.id)) document.getElementById(d.id).innerText = d.data().text; }));
-    }
-
-    // ゲームロジックなどは以前のものを踏襲
-    function startGame() { /* ゲーム開始処理 */ document.getElementById('start-screen').style.display='none'; }
     async function sendChat() {
         const m = document.getElementById('chat-msg').value;
         if(m) { await db.collection("chats").add({name:myName, msg:m, date:new Date()}); document.getElementById('chat-msg').value=""; }
