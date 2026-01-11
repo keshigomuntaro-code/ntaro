@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>消しゴムんたろう 公式サイト</title>
+    <title>消しゴムんたろう 真・完全版</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
@@ -11,91 +11,100 @@
         .dark-mode { --main-blue: #333; --bg-color: #000; --text-color: #eee; --sub-blue: #1a1a1a; --fever-gold: #fff; }
 
         body { font-family: "Hiragino Maru Gothic Pro", "Yu Gothic", sans-serif; margin: 0; background-color: var(--bg-color); color: var(--text-color); text-align: center; transition: background 0.5s; overflow-x: hidden; }
-        header { background: linear-gradient(135deg, #fff, var(--sub-blue)); padding: 20px; border-bottom: 5px solid var(--main-blue); }
+        header { background: linear-gradient(135deg, #fff, var(--sub-blue)); padding: 15px; border-bottom: 5px solid var(--main-blue); }
         .dark-mode header { background: #111; border-bottom-color: #fff; }
         
-        .account-bar { background: var(--main-blue); color: #fff; padding: 8px; font-size: 0.9em; font-weight: bold; }
-        .container { max-width: 800px; margin: 0 auto; padding: 15px; background: transparent; }
-        section { margin-bottom: 25px; padding: 20px; border-radius: 20px; background: #fff; border: 2px solid var(--sub-blue); position: relative;}
+        .account-bar { background: var(--main-blue); color: #fff; padding: 8px; font-size: 0.9em; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .container { max-width: 800px; margin: 0 auto; padding: 15px; }
+        section { margin-bottom: 20px; padding: 20px; border-radius: 20px; background: #fff; border: 2px solid var(--sub-blue); position: relative;}
         .dark-mode section { background: #000; border: 1px solid #444; }
 
-        /* ゲームエリア */
-        #game-container { position: relative; width: 100%; height: 350px; background-color: var(--sub-blue); border-radius: 10px; overflow: hidden; touch-action: none; cursor: crosshair; }
-        #player { position: absolute; bottom: 10px; width: 60px; z-index: 10; pointer-events: none; left: 50%; transform: translateX(-50%); transition: width 0.3s; }
+        /* キャラプロフィール（最上部用） */
+        .hero-top { display: flex; align-items: center; gap: 20px; text-align: left; background: white; border: 3px solid var(--main-blue); }
+        .hero-img { width: 80px; height: 80px; object-fit: contain; }
+        .hero-text { flex: 1; font-size: 0.85em; line-height: 1.4; }
+
+        /* ゲーム */
+        #game-container { position: relative; width: 100%; height: 300px; background-color: var(--sub-blue); border-radius: 10px; overflow: hidden; touch-action: none; }
+        #player { position: absolute; bottom: 10px; width: 60px; z-index: 10; pointer-events: none; left: 50%; transform: translateX(-50%); transition: 0.2s; }
         .kusu { position: absolute; font-size: 30px; z-index: 5; pointer-events: none; }
-        #fever-bar-container { width: 100%; height: 10px; background: #eee; border-radius: 5px; margin-bottom: 10px; overflow: hidden; }
-        #fever-bar { width: 0%; height: 100%; background: var(--fever-gold); transition: 0.2s; }
 
-        /* 称号バッジ */
-        .badge { font-size: 0.75em; padding: 2px 8px; border-radius: 4px; margin-right: 5px; color: white; font-weight: bold; display: inline-block; }
-        .badge-admin { background: #000; color: #ffd700 !important; border: 1px solid #ffd700; }
-        .dark-mode .badge-admin { background: #fff; color: #000 !important; border-color: #000; }
-        .badge-master { background: #ff4500; }
-        .badge-craftsman { background: #50c878; }
+        /* ガチャ */
+        .gacha-panel { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 10px; }
+        .skin-card { width: 65px; padding: 8px; border: 2px solid #ddd; border-radius: 10px; cursor: pointer; font-size: 0.65em; background: #fff; }
+        .skin-card.locked { opacity: 0.4; filter: grayscale(1); }
+        .skin-card.selected { border-color: var(--main-blue); background: var(--sub-blue); border-width: 3px; }
 
-        .chat-container { text-align: left; height: 300px; overflow-y: auto; padding: 15px; background: var(--sub-blue); border-radius: 15px; display: flex; flex-direction: column; }
-        .chat-bubble { background: #fff; border-radius: 15px; padding: 10px 14px; margin-bottom: 10px; align-self: flex-start; max-width: 85%; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); }
-        .dark-mode .chat-bubble { background: #111; color: #fff; border: 1px solid #333; }
-        
-        .adm-tool { color: #ff4444; font-size: 0.7em; cursor: pointer; text-decoration: underline; margin-left: 5px; font-weight: bold; }
-        .editable-text:hover { outline: 2px dashed #00ff41; background: rgba(0,255,65,0.1); cursor: pointer; }
-
-        .btn { padding: 10px 20px; font-weight: bold; border-radius: 50px; border: none; cursor: pointer; background: var(--main-blue); color: #fff; }
-        .dark-mode .btn { background: #fff; color: #000; }
-        .char-img { max-width: 120px; }
-        .dark-mode .char-img { filter: grayscale(1) invert(1); }
-        .logout-btn { background: #ff4444; color: white; border: none; padding: 2px 8px; border-radius: 5px; font-size: 0.7em; cursor: pointer; margin-left: 10px; }
+        .tab-box { display: flex; justify-content: center; gap: 8px; margin-bottom: 10px; }
+        .tab { padding: 6px 12px; border-radius: 15px; background: #ddd; cursor: pointer; font-size: 0.8em; }
+        .tab.active { background: var(--main-blue); color: white; }
+        .btn { padding: 10px 20px; font-weight: bold; border-radius: 50px; border: none; cursor: pointer; background: var(--main-blue); color: #fff; margin: 5px; }
+        .adm-panel { background: #1a1a1a; color: #00ff41; padding: 15px; font-size: 0.8em; border-radius: 15px; text-align: left; display: none; border: 1px solid #00ff41; margin-top: 10px; }
+        .editable-text:hover { outline: 2px dashed #00ff41; cursor: pointer; }
+        .chat-container { text-align: left; height: 180px; overflow-y: auto; padding: 15px; background: var(--sub-blue); border-radius: 15px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
-    <div id="ban-screen" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:black; color:white; z-index:100000; justify-content:center; align-items:center;">
-        <h1>🚫 ACCESS DENIED</h1>
-    </div>
-
     <div id="main-content">
-        <div class="account-bar">
+        <div class="account-bar" onclick="changeMyName()">
             👤 <span id="display-user">...</span> <span id="my-badge-area"></span>
-            <button id="logout-area" class="logout-btn" style="display:none;" onclick="logout()">ログアウト</button>
+            <span style="margin-left:auto;">💰 <span id="kp-display">0</span> KP</span>
         </div>
+
         <div class="container">
-            <header><h1><span class="editable-site-text" id="site_title" onclick="showUserPassList()">消しゴムんたろう</span> <span id="version-title" onclick="showBanList()">公式</span></h1></header>
-            
-            <section class="hero">
-                <img src="image_b322c7.png" class="char-img">
-                <div class="profile-text editable-site-text" id="profile_box" onclick="editSiteText('profile_box')" style="text-align:left; font-size:0.9em;">
-                    間違いを消し去るヒーロー。身を削って働く。
+            <header>
+                <h1><span class="editable-site-text" id="site_title" onclick="editSiteText('site_title')">消しゴムんたろう</span> <span id="version-title" onclick="showBanList()">公式</span></h1>
+            </header>
+
+            <section class="hero-top">
+                <img src="image_b322c7.png" class="hero-img">
+                <div class="hero-text">
+                    <strong>【キャラ紹介】</strong><br>
+                    <span class="editable-site-text" id="profile_box" onclick="editSiteText('profile_box')">
+                        間違いを消し去るヒーロー。身を削って働く、みんなの味方。
+                    </span>
                 </div>
             </section>
 
             <section id="game-section">
-                <div id="fever-bar-container"><div id="fever-bar"></div></div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-weight:bold;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-weight:bold; font-size:0.8em;">
                     <span id="score-board">スコア: 0</span><span id="timer">残り: 45s</span>
                 </div>
                 <div id="game-container">
                     <img src="image_b322c7.png" id="player">
-                    <div id="start-screen" style="position:absolute; width:100%; height:100%; background:rgba(74, 144, 226, 0.8); display:flex; align-items:center; justify-content:center; z-index:100;">
-                        <button class="btn" onclick="startGame()">スタート</button>
+                    <div id="start-screen" style="position:absolute; width:100%; height:100%; background:rgba(74, 144, 226, 0.9); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:100; color:white;">
+                        <button class="btn" style="background:#50c878;" onclick="prepGame('classic')">クラシック</button>
+                        <button class="btn" style="background:#ff4444;" onclick="prepGame('survival')">サバイバル</button>
                     </div>
                 </div>
             </section>
 
             <section>
-                <h4 class="editable-site-text" id="rank_head" onclick="editSiteText('rank_head')">🏆 順位</h4>
-                <div id="ranking-display"></div>
+                <h4>🎁 ガチャ・図鑑</h4>
+                <button class="btn" onclick="drawGacha()" style="background:#f39c12; font-size:0.8em;">ガチャを回す (500KP)</button>
+                <div class="gacha-panel" id="skin-list"></div>
             </section>
 
             <section>
-                <h4 class="editable-site-text" id="chat_head" onclick="editSiteText('chat_head')">💬 チャット</h4>
-                <div class="chat-container" id="chat-display"></div>
-                <div style="display: flex; gap: 5px; margin-top: 10px;">
-                    <input type="text" id="chat-msg" placeholder="メッセージ..." style="padding:12px; border-radius:10px; border:1px solid #ddd; flex:1;">
-                    <button class="btn" onclick="sendChat()">送信</button>
+                <div class="tab-box">
+                    <div class="tab active" id="tab-classic" onclick="switchTab('classic')">クラシック順位</div>
+                    <div class="tab" id="tab-survival" onclick="switchTab('survival')">サバイバル順位</div>
                 </div>
+                <div id="ranking-display" style="font-size:0.9em;"></div>
+                <div id="adm-rank-tools" class="adm-panel">
+                    <b>【管理者】</b><br>
+                    <button onclick="addKP(99999)">KP付与</button>
+                    <button onclick="unlockAllSkins()">全解放</button>
+                    <button onclick="showUserPassList()">名簿</button>
+                </div>
+            </section>
+
+            <section>
+                <div class="chat-container" id="chat-display"></div>
+                <div style="display:flex; gap:5px;"><input type="text" id="chat-msg" style="flex:1;"><button class="btn" onclick="sendChat()" style="padding:5px 15px;">送</button></div>
             </section>
         </div>
     </div>
-
     <div onclick="toggleBackworld()" style="position:fixed; bottom:0; right:0; width:40px; height:40px; opacity:0; z-index:10000;"></div>
 
     <script>
@@ -107,185 +116,136 @@
         let myID = localStorage.getItem("ntaro_id") || "ID_" + Math.random().toString(36).substr(2, 9);
         localStorage.setItem("ntaro_id", myID);
         let myName = localStorage.getItem("ntaro_user") || "";
-        let myTitle = "";
-        let isBackworld = false;
+        let userData = { kp: 0, skins: ['normal'], currentSkin: 'normal', title: '' };
+        let isBackworld = false, currentTab = 'classic', currentGameMode = 'classic', config = { speed: 6 };
 
-        function getBadgeHTML(t) { 
-            if(!t) return "";
-            const cls = t==='管理人'?'badge-admin':(t==='消しゴムマスター'?'badge-master':(t==='消しゴム職人'?'badge-craftsman':'badge-custom'));
-            return `<span class="badge ${cls}">${t}</span>`;
-        }
+        const SKINS = {
+            'normal': { name: '元祖', img: 'image_b322c7.png', rarity: 'N', color: '#666' },
+            'gold': { name: '黄金', img: 'https://cdn-icons-png.flaticon.com/512/2583/2583344.png', rarity: 'SSS', color: '#ffd700' },
+            'black': { name: '黒板消し', img: 'https://cdn-icons-png.flaticon.com/512/167/167638.png', rarity: 'SR', color: '#e74c3c' }
+        };
 
-        window.onload = () => { initAccount(); startLoadingData(); syncSiteTexts(); };
+        window.onload = () => { initAccount(); startLoadingData(); syncConfig(); syncSiteTexts(); };
 
         async function initAccount() {
-            const b = await db.collection("bans").doc(myID).get(); 
-            if(b.exists) { document.getElementById("main-content").style.display = "none"; document.getElementById("ban-screen").style.display = "flex"; return; }
-            if (myName) {
-                db.collection("users").doc(myName).onSnapshot(doc => {
-                    if(doc.exists) {
-                        myTitle = doc.data().title || "";
-                        document.getElementById("display-user").innerText = myName;
-                        document.getElementById("my-badge-area").innerHTML = getBadgeHTML(myTitle);
-                    } else { loginFlow(); }
-                });
-            } else { loginFlow(); }
-        }
-
-        async function loginFlow() { 
-            let n = prompt("名前"); if(!n) return; 
-            const r = db.collection("users").doc(n); const d = await r.get(); 
-            if(d.exists) { if(prompt("パスワード")===d.data().pass) myName=n; else return loginFlow(); } 
-            else { let p=prompt("新規パス"); if(p){ await r.set({pass:p, uid:myID, title:""}); myName=n; } } 
-            localStorage.setItem("ntaro_user", myName); location.reload(); 
-        }
-
-        function logout() {
-            localStorage.removeItem("ntaro_user");
-            location.reload();
-        }
-
-        async function showUserPassList() {
-            if (!isBackworld) return;
-            const snap = await db.collection("users").get();
-            let list = "【全ユーザー・パスワード一覧】\n\n";
-            snap.forEach(doc => {
-                list += `名前: ${doc.id} / パス: ${doc.data().pass}\n`;
-            });
-            alert(list);
-        }
-
-        function syncSiteTexts() {
-            db.collection("configs").onSnapshot(snap => {
-                snap.forEach(doc => {
-                    const el = document.getElementById(doc.id);
-                    if (el) el.innerHTML = doc.data().text;
-                });
+            if (!myName) return loginFlow();
+            db.collection("users").doc(myName).onSnapshot(doc => {
+                if(doc.exists) {
+                    userData = { ...userData, ...doc.data() };
+                    document.getElementById("display-user").innerText = myName;
+                    document.getElementById("kp-display").innerText = userData.kp;
+                    renderSkins(); updatePlayerSkin();
+                } else { loginFlow(); }
             });
         }
 
-        async function editSiteText(id) {
-            if (!isBackworld) return;
-            const el = document.getElementById(id);
-            const newVal = prompt("一斉書き換え内容:", el.innerHTML.replace(/<br>/g, "\n"));
-            if (newVal !== null) await db.collection("configs").doc(id).set({ text: newVal.replace(/\n/g, "<br>") });
+        async function loginFlow() {
+            let n = prompt("名前を入力"); if(!n) return;
+            const r = db.collection("users").doc(n), d = await r.get();
+            if(d.exists) { if(prompt("パスワード")===d.data().pass) myName=n; else return loginFlow(); }
+            else { let p=prompt("新規パス"); if(p){ await r.set({pass:p, uid:myID, kp:0, skins:['normal'], currentSkin:'normal', title:''}); myName=n; } }
+            localStorage.setItem("ntaro_user", myName); location.reload();
         }
 
-        function startLoadingData() {
-            db.collection("chats").orderBy("date", "asc").limitToLast(20).onSnapshot(s => {
-                document.getElementById('chat-display').innerHTML = s.docs.map(doc => {
-                    const d = doc.data();
-                    const adminTools = isBackworld ? `<span class="adm-tool" onclick="doBan('${d.name}')">[BAN]</span>` : "";
-                    const editLogic = isBackworld ? `onclick="directEdit('chats','${doc.id}','msg','${d.msg}')"` : "";
-                    return `<div class="chat-bubble"><div style="font-size:0.7em;font-weight:bold;">${getBadgeHTML(d.title)}${d.name}${adminTools}</div><div ${editLogic}>${d.msg}</div></div>`;
-                }).join('');
-                document.getElementById('chat-display').scrollTop = 9999;
-            });
-            db.collection("ranking").orderBy("score", "desc").limit(10).onSnapshot(s => { 
-                document.getElementById('ranking-display').innerHTML = s.docs.map((doc, i) => {
-                    const d = doc.data();
-                    const adminTools = isBackworld ? `<span class="adm-tool" onclick="selectTitle('${d.name}')">[称号]</span><span class="adm-tool" onclick="doBan('${d.name}')">[BAN]</span>` : "";
-                    const editScore = isBackworld ? `onclick="directEdit('ranking','${doc.id}','score','${d.score}')"` : "";
-                    return `<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;"><span>${i+1}位:${getBadgeHTML(d.title)}${d.name}${adminTools}</span><span ${editScore} style="font-weight:bold;">${d.score}</span></div>`;
-                }).join(''); 
-            });
+        async function changeMyName() {
+            if(isBackworld) return;
+            const newName = prompt("新しい名前:", myName);
+            if(!newName || newName === myName) return;
+            const check = await db.collection("users").doc(newName).get();
+            if(check.exists) return alert("使用済みです");
+            const data = (await db.collection("users").doc(myName).get()).data();
+            await db.collection("users").doc(newName).set(data);
+            await db.collection("users").doc(myName).delete();
+            myName = newName; localStorage.setItem("ntaro_user", myName); location.reload();
         }
 
-        // --- ゲームエンジン ---
-        let score = 0, gameActive = false, timeLeft = 45, feverGauge = 0, isFever = false;
+        function renderSkins() {
+            const list = document.getElementById('skin-list');
+            list.innerHTML = Object.keys(SKINS).map(key => {
+                const s = SKINS[key]; const locked = !userData.skins.includes(key); const selected = userData.currentSkin === key;
+                return `<div class="skin-card ${locked?'locked':''} ${selected?'selected':''}" onclick="selectSkin('${key}')">
+                    <span style="color:${s.color};font-weight:bold;">${s.rarity}</span><br>
+                    <img src="${s.img}" style="width:100%;height:30px;object-fit:contain;"><br>${s.name}</div>`;
+            }).join('');
+        }
+
+        async function selectSkin(key) { if(userData.skins.includes(key)) await db.collection("users").doc(myName).update({ currentSkin: key }); }
+        function updatePlayerSkin() { document.getElementById('player').src = SKINS[userData.currentSkin]?.img || SKINS.normal.img; }
+
+        async function drawGacha() {
+            if(userData.kp < 500) return alert("500KP必要");
+            await db.collection("users").doc(myName).update({ kp: userData.kp - 500 });
+            const keys = Object.keys(SKINS); const res = keys[Math.floor(Math.random()*keys.length)];
+            alert("結果: " + SKINS[res].name);
+            await db.collection("users").doc(myName).update({ skins: firebase.firestore.FieldValue.arrayUnion(res) });
+        }
+
+        function syncSiteTexts() { db.collection("configs").onSnapshot(s => s.forEach(d => { if(d.id!=='game_settings'){ const el=document.getElementById(d.id); if(el) el.innerHTML=d.data().text; } })); }
+        async function editSiteText(id) { if(!isBackworld) return; const el=document.getElementById(id); const v=prompt("一斉編集:", el.innerHTML.replace(/<br>/g,"\n")); if(v!==null) await db.collection("configs").doc(id).set({text:v.replace(/\n/g,"<br>")}); }
+
+        let score = 0, gameActive = false, timeLeft = 45;
+        function prepGame(m) { currentGameMode = m; startGame(); }
         function startGame() {
-            if(!myName) return; score=0; feverGauge=0; timeLeft=45; gameActive=true; isFever=false;
+            score=0; timeLeft=(currentGameMode==='survival'?999:45); gameActive=true;
             document.getElementById('start-screen').style.display='none';
-            document.getElementById('player').style.width = (myTitle==='管理人'?"150px":"60px");
-            updateUI();
             const timerInt = setInterval(() => {
-                timeLeft--; document.getElementById('timer').innerText=`残り: ${timeLeft}s`;
-                if(timeLeft<=0 || !gameActive) { clearInterval(timerInt); gameActive=false; saveScoreToFirebase(); document.getElementById('start-screen').style.display='flex'; }
+                if(currentGameMode==='classic') { timeLeft--; document.getElementById('timer').innerText=`残り: ${timeLeft}s`; }
+                if(timeLeft<=0 || !gameActive) { clearInterval(timerInt); gameActive=false; finishGame(); }
             }, 1000);
             spawnLoop();
         }
-        function spawnLoop() { if(!gameActive) return; spawnItem(); setTimeout(spawnLoop, isFever?150:(myTitle==='管理人'?250:500)); }
+        function spawnLoop() { if(!gameActive) return; spawnItem(); setTimeout(spawnLoop, 500); }
         function spawnItem() {
             const it = document.createElement('div'); it.className='kusu'; const r = Math.random();
-            it.innerText = (r < 0.15) ? '💣' : (r < 0.4 ? '⭐' : '☁️');
-            if(isBackworld) it.style.filter = "grayscale(1) invert(1)";
+            it.innerText = (r < 0.2) ? '💣' : (r < 0.5 ? '⭐' : '☁️');
             it.style.left = Math.random()*(document.getElementById('game-container').offsetWidth-40)+'px'; it.style.top = '-40px';
             document.getElementById('game-container').appendChild(it);
             let fallInt = setInterval(() => {
                 if(!gameActive) { it.remove(); clearInterval(fallInt); return; }
-                let t = parseInt(it.style.top); it.style.top = (t + (isFever?10:6)) + 'px';
+                let t = parseInt(it.style.top); it.style.top = (t + config.speed) + 'px';
                 const pR = document.getElementById('player').getBoundingClientRect(), iR = it.getBoundingClientRect();
                 if (!(pR.top > iR.bottom || pR.bottom < iR.top || pR.left > iR.right || pR.right < iR.left)) {
-                    if(it.innerText === '💣') { score = Math.max(0, score - 50); feverGauge = 0; }
-                    else {
-                        let b = (it.innerText==='⭐'?30:10);
-                        if(myTitle==='管理人') b*=3.0; else if(myTitle==='消しゴムマスター') b*=1.5;
-                        score += Math.round(b);
-                        if(!isFever) { feverGauge += 5; if(feverGauge>=100) { isFever=true; feverGauge=100; setTimeout(()=> { isFever=false; feverGauge=0; updateUI(); }, 8000); } }
-                    }
-                    updateUI(); it.remove(); clearInterval(fallInt);
+                    if(it.innerText === '💣') { if(currentGameMode==='survival') gameActive=false; else score = Math.max(0, score-50); }
+                    else { score += (it.innerText==='⭐'?30:10); }
+                    document.getElementById('score-board').innerText = "スコア: " + score; it.remove(); clearInterval(fallInt);
                 }
                 if (t > 400) { it.remove(); clearInterval(fallInt); }
             }, 20);
         }
-        function updateUI() { 
-            document.getElementById('score-board').innerText = "スコア: " + score; 
-            document.getElementById('fever-bar').style.width = (isFever ? 100 : feverGauge) + "%";
-            document.getElementById('fever-bar').style.background = isFever ? "linear-gradient(90deg, gold, white, gold)" : "var(--fever-gold)";
-        }
-        
-        async function selectTitle(targetName) {
-            const choice = prompt("称号を選択:\n1: 管理人\n2: 消しゴムマスター\n3: 消しゴム職人\n4: なし\n5: 自由入力");
-            let t = "";
-            if (choice === "1") t = "管理人"; else if (choice === "2") t = "消しゴムマスター"; else if (choice === "3") t = "消しゴム職人"; else if (choice === "5") t = prompt("入力:");
-            if (choice) await db.collection("users").doc(targetName).update({ title: t });
-        }
-
-        async function doBan(targetName) {
-            if(!confirm(`${targetName}を追放しますか？`)) return;
-            const u = await db.collection("users").doc(targetName).get();
-            if(u.exists) { await db.collection("bans").doc(u.data().uid).set({name: targetName}); alert("Banned."); }
-        }
-
-        async function showBanList() {
-            if (!isBackworld) return;
-            const snap = await db.collection("bans").get();
-            if (snap.empty) return alert("追放者なし");
-            let target = prompt("解除する名前を入力:\n" + snap.docs.map(d => d.data().name).join(", "));
-            if (target) {
-                const doc = snap.docs.find(d => d.data().name === target);
-                if (doc) await db.collection("bans").doc(doc.id).delete();
+        async function finishGame() {
+            document.getElementById('start-screen').style.display='flex';
+            if(score > 0) {
+                await db.collection(`rank_${currentGameMode}`).add({name:myName, score, date: new Date()});
+                await db.collection("users").doc(myName).update({ kp: firebase.firestore.FieldValue.increment(score) });
+                alert(score + " KP獲得！");
             }
         }
 
         function toggleBackworld() {
             if (!isBackworld) {
-                if (myTitle === '管理人' || prompt("key") === ADMIN_PASS) {
+                if (userData.title === '管理人' || prompt("key") === ADMIN_PASS) {
                     isBackworld = true; document.body.classList.add('dark-mode');
+                    document.getElementById('adm-rank-tools').style.display = "block";
                     document.getElementById('version-title').innerText = "裏";
-                    document.getElementById('logout-area').style.display = "inline-block";
                     document.querySelectorAll('.editable-site-text').forEach(e => e.classList.add('editable-text'));
-                    startLoadingData();
                 }
-            } else {
-                isBackworld = false; document.body.classList.remove('dark-mode');
-                document.getElementById('version-title').innerText = "公式";
-                document.getElementById('logout-area').style.display = "none";
-                document.querySelectorAll('.editable-site-text').forEach(e => e.classList.remove('editable-text'));
-                startLoadingData();
-            }
+            } else { location.reload(); }
         }
-
-        async function directEdit(col, id, key, oldVal) {
-            const newVal = prompt(`Modify ${key}:`, oldVal);
-            if (newVal !== null) await db.collection(col).doc(id).update({ [key]: (key==='score'?Number(newVal):newVal) });
+        function startLoadingData() {
+            db.collection(`rank_${currentTab}`).orderBy("score", "desc").limit(10).onSnapshot(s => {
+                document.getElementById('ranking-display').innerHTML = s.docs.map((doc, i) => `<div>${i+1}位: ${doc.data().name} - ${doc.data().score}</div>`).join('');
+            });
+            db.collection("chats").orderBy("date", "asc").limitToLast(10).onSnapshot(s => {
+                document.getElementById('chat-display').innerHTML = s.docs.map(doc => `<div><b>${doc.data().name}</b>: ${doc.data().msg}</div>`).join('');
+                document.getElementById('chat-display').scrollTop = 999;
+            });
         }
-
-        async function saveScoreToFirebase() { await db.collection("ranking").add({uid:myID, name:myName, score, title:myTitle, date: firebase.firestore.FieldValue.serverTimestamp()}); }
-        async function sendChat() { const m = document.getElementById('chat-msg').value; if(m && myName) { await db.collection("chats").add({uid:myID, name:myName, msg:m, title:myTitle, date: firebase.firestore.FieldValue.serverTimestamp()}); document.getElementById('chat-msg').value=""; } }
-        function move(cx) { if(!gameActive) return; const rect = document.getElementById('game-container').getBoundingClientRect(); let x = cx - rect.left - (document.getElementById('player').offsetWidth/2); document.getElementById('player').style.left = x + 'px'; }
+        function syncConfig() { db.collection("configs").doc("game_settings").onSnapshot(doc => { if(doc.exists) config = doc.data(); }); }
+        function switchTab(m) { currentTab = m; document.getElementById('tab-classic').className = m==='classic'?'tab active':'tab'; document.getElementById('tab-survival').className = m==='survival'?'tab active':'tab'; startLoadingData(); }
+        async function sendChat() { const m = document.getElementById('chat-msg').value; if(m) { await db.collection("chats").add({name:myName, msg:m, date: new Date()}); document.getElementById('chat-msg').value=""; } }
+        function move(cx) { if(!gameActive) return; const r = document.getElementById('game-container').getBoundingClientRect(); document.getElementById('player').style.left = (cx - r.left - 30) + 'px'; }
         document.getElementById('game-container').addEventListener('mousemove', (e)=>move(e.clientX));
-        document.getElementById('game-container').addEventListener('touchmove', (e)=>{ e.preventDefault(); move(e.touches[0].clientX); }, {passive:false});
+        document.getElementById('game-container').addEventListener('touchmove', (e)=>{e.preventDefault(); move(e.touches[0].clientX);}, {passive:false});
     </script>
 </body>
 </html>
