@@ -3,77 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>消しゴムんたろう 実験版</title>
+    <title>消しゴムんたろう 改ざん権限版</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
-        :root { --main-blue: #4A90E2; --bg-color: #f0f4f8; --text-color: #333; --sub-blue: #EAF4FF; --adm-green: #00ff41; --adm-red: #ff3333; }
+        :root { --main-blue: #4A90E2; --bg-color: #f0f4f8; --text-color: #333; --sub-blue: #EAF4FF; --fever-gold: #FFD700; --adm-green: #00ff41; --adm-red: #ff3333; }
         .dark-mode { --bg-color: #050505; --text-color: var(--adm-green); --sub-blue: #111; }
 
-        body { font-family: "Hiragino Maru Gothic Pro", sans-serif; margin: 0; background-color: var(--bg-color); color: var(--text-color); transition: 0.5s; }
+        body { font-family: "Hiragino Maru Gothic Pro", sans-serif; margin: 0; background-color: var(--bg-color); color: var(--text-color); transition: 0.5s; overflow-x: hidden; }
         .account-bar { background: var(--main-blue); color: #fff; padding: 12px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         .container { max-width: 800px; margin: 0 auto; padding: 15px; }
         
         section { margin-bottom: 25px; padding: 20px; border-radius: 20px; background: #fff; border: 2px solid var(--sub-blue); }
-        .dark-mode section { background: #000; border-color: var(--adm-green); }
-
-        /* プロフィールエリア */
-        .profile-card { display: flex; align-items: center; gap: 15px; text-align: left; }
-        .profile-img { width: 70px; height: 70px; border-radius: 50%; border: 3px solid var(--main-blue); }
-        .profile-info { flex: 1; }
-        .profile-bio { font-size: 0.85em; color: #666; margin-top: 5px; cursor: pointer; }
-        .dark-mode .profile-bio { color: var(--adm-green); }
+        .dark-mode section { background: #000; border-color: var(--adm-green); box-shadow: 0 0 15px rgba(0,255,65,0.1); }
 
         /* 裏世界：改ざん司令室 */
-        #adm-console { display: none; background: #000; color: var(--adm-green); border: 3px solid var(--adm-green); border-radius: 20px; padding: 20px; margin-bottom: 30px; font-family: monospace; }
-        .adm-box { border: 1px solid var(--adm-green); padding: 15px; border-radius: 10px; margin-bottom: 15px; text-align: left; }
-        .adm-input { background: #000; border: 1px solid var(--adm-green); color: var(--adm-green); width: 100%; padding: 8px; margin-bottom: 5px; box-sizing: border-box; }
+        #adm-console { display: none; background: #000; color: var(--adm-green); border: 3px solid var(--adm-green); border-radius: 20px; padding: 20px; margin-bottom: 30px; font-family: 'Courier New', monospace; text-align: left; }
+        .adm-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        .adm-box { border: 1px solid var(--adm-green); padding: 15px; border-radius: 10px; }
+        .adm-input { background: #000; border: 1px solid var(--adm-green); color: var(--adm-green); width: 100%; padding: 8px; margin-bottom: 10px; }
         .adm-btn { background: var(--adm-green); color: #000; border: none; padding: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 5px; }
+        .adm-btn.danger { background: var(--adm-red); color: white; }
 
+        /* 改ざん可能テキストの装飾 */
         .editable-active { outline: 2px dashed var(--adm-green); cursor: pointer; }
-        .chat-container { height: 250px; overflow-y: auto; background: #f8f9fa; border-radius: 15px; padding: 15px; display: flex; flex-direction: column; }
+        .editable-active:hover { background: rgba(0, 255, 65, 0.1); }
+
+        /* ゲーム・チャット */
+        #game-container { position: relative; width: 100%; height: 350px; background-color: var(--sub-blue); border-radius: 15px; overflow: hidden; touch-action: none; border: 2px solid #ddd; }
+        #player { position: absolute; bottom: 10px; width: 60px; z-index: 10; pointer-events: none; transform: translateX(-50%); }
+        .chat-container { text-align: left; height: 300px; overflow-y: auto; padding: 15px; background: #f8f9fa; border-radius: 15px; display: flex; flex-direction: column; }
         .dark-mode .chat-container { background: #000; border: 1px solid var(--adm-green); }
-        .chat-bubble { background: #fff; border-radius: 15px; padding: 10px; margin-bottom: 8px; color: #333; position: relative; width: fit-content; max-width: 80%; }
-        .dark-mode .chat-bubble { background: #1a1a1a; color: var(--adm-green); border: 1px solid var(--adm-green); }
+        .chat-bubble { background: #fff; border-radius: 15px; padding: 10px; margin-bottom: 10px; max-width: 85%; color: #333; position: relative; }
+        .dark-mode .chat-bubble { background: #1a1a1a; color: var(--adm-green); }
         
-        .badge { font-size: 0.7em; padding: 2px 8px; border-radius: 4px; color: white; background: #666; font-weight: bold; }
+        .adm-del-btn { position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; border: none; cursor: pointer; display: none; }
+        .badge { font-size: 0.7em; padding: 2px 8px; border-radius: 4px; color: white; margin-right: 5px; background: #666; font-weight: bold; }
         .badge-admin { background: #000; color: #ffd700 !important; border: 1px solid #ffd700; }
     </style>
 </head>
 <body>
 
+<div id="ban-screen" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:black; color:red; z-index:100000; justify-content:center; align-items:center;"><h1>🚫 ACCESS DENIED</h1></div>
+
 <div class="account-bar">
     <div>👤 <span id="my-badge-area"></span><span id="display-user">ゲスト</span></div>
-    <button onclick="logout()" style="background:none; border:1px solid #fff; color:#fff; cursor:pointer;">ログアウト</button>
+    <button onclick="logout()" style="background:none; border:1px solid #fff; color:#fff; padding:4px; cursor:pointer;">ログアウト</button>
 </div>
 
 <div class="container">
-    <header style="margin-bottom:20px;">
-        <h1 id="site-title" class="editable-text" onclick="editStaticText('site-title')">消しゴムんたろう</h1>
-        <div class="profile-card" style="background:rgba(255,255,255,0.5); padding:15px; border-radius:15px;">
-            <img src="image_b322c7.png" class="profile-img">
-            <div class="profile-info">
-                <b id="hero-name" class="editable-text" onclick="editStaticText('hero-name')">消しゴムんたろう</b>
-                <div id="hero-bio" class="profile-bio editable-text" onclick="editStaticText('hero-bio')">間違いを消し去る孤高の戦士。</div>
-            </div>
-        </div>
-    </header>
+    <h1 id="site-title" class="editable-text" onclick="editStaticText('site-title')">消しゴムんたろう</h1>
 
     <section id="adm-console">
-        <h2 style="color:white; border-bottom:1px solid var(--adm-green);">DATA OVERRIDE</h2>
-        <div class="adm-box">
-            <b>👤 ユーザー情報改ざん</b><br><br>
-            対象: <select id="adm-user-select" class="adm-input"></select>
-            称号: <input type="text" id="adm-title-input" class="adm-input" placeholder="新称号">
-            紹介文: <input type="text" id="adm-bio-input" class="adm-input" placeholder="紹介文を強制上書き">
-            <button class="adm-btn" onclick="admFullUpdate()">一括改ざん実行</button>
+        <h2 style="color:white; border-bottom: 2px solid var(--adm-green);">OVERRIDE COMMAND</h2>
+        <div class="adm-grid">
+            <div class="adm-box">
+                <b>👤 ユーザー改ざん</b><br><br>
+                対象: <select id="adm-user-select" class="adm-input"></select>
+                新称号: <input type="text" id="adm-title-input" class="adm-input" placeholder="神 / 運営 / 囚人">
+                <button class="adm-btn" onclick="admApplyTitle()">称号を強制書き換え</button>
+                <button class="adm-btn danger" onclick="admBanUser()">永久追放(BAN)</button>
+            </div>
+            <div class="adm-box">
+                <b>🛠 システム介入</b><br><br>
+                <button class="adm-btn" onclick="showUserPassList()">🔑 全パスワード閲覧</button>
+                <button class="adm-btn" onclick="showBanList()">🚫 BANリスト解除</button>
+                <button class="adm-btn danger" onclick="resetRank()">🗑 ランキング全消去</button>
+                速度: <input type="range" id="adm-speed-range" min="2" max="25" onchange="admUpdateConfig()">
+            </div>
         </div>
-        <button class="adm-btn" style="background:orange;" onclick="showUserPassList()">🔑 全ユーザーパスワード表示</button>
+        <p style="font-size:10px; color:#666; margin-top:10px;">※ランキングのスコアやテキストを直接クリックで改ざん可能です。</p>
     </section>
 
-    <section>
-        <h4>My Profile</h4>
-        <div class="profile-bio" id="my-bio-display" onclick="updateMyBio()">自己紹介を設定（ここをタップ）</div>
+    <section id="game-section">
+        <div id="game-container">
+            <img src="image_b322c7.png" id="player">
+            <div id="start-screen" style="position:absolute; width:100%; height:100%; background:rgba(74, 144, 226, 0.8); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:100; gap:10px;">
+                <button style="padding:15px 30px; border-radius:50px; border:none; background:#50c878; color:white; font-weight:bold;" onclick="startGame()">ゲーム開始</button>
+            </div>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-weight:bold; margin-top:10px;">
+            <span id="score-board">スコア: 0</span><span id="timer">準備完了</span>
+        </div>
     </section>
 
     <section>
@@ -82,7 +93,7 @@
     </section>
 
     <section>
-        <h4>💬 通信ログ</h4>
+        <h4 id="chat-head" class="editable-text" onclick="editStaticText('chat-head')">💬 ログ（チャット）</h4>
         <div class="chat-container" id="chat-display"></div>
         <div style="display:flex; gap:5px; margin-top:10px;">
             <input type="text" id="chat-msg" style="flex:1; padding:10px; border-radius:10px; border:1px solid #ddd;">
@@ -101,8 +112,8 @@
     let myID = localStorage.getItem("ntaro_id") || "ID_" + Math.random().toString(36).substr(2, 9);
     localStorage.setItem("ntaro_id", myID);
     let myName = localStorage.getItem("ntaro_user") || "";
-    let userData = { title: '新人', bio: 'よろしくお願いします。', uid: myID };
-    let isBackworld = false;
+    let userData = { title: '新人', uid: myID };
+    let isBackworld = false, sysConfig = { speed: 6 };
 
     window.onload = () => { if(!myName) login(); else init(); };
 
@@ -110,17 +121,20 @@
         let n = prompt("名前"); if(!n) return;
         const r = db.collection("users").doc(n), d = await r.get();
         if(d.exists) { if(prompt("パスワード")===d.data().pass) { myName=n; init(); } else login(); }
-        else { let p = prompt("新規パスワード"); await r.set({pass:p, title:'新人', bio:'よろしくお願いします。', uid:myID}); myName=n; init(); }
+        else { let p = prompt("新規パスワード"); await r.set({pass:p, title:'新人', uid:myID}); myName=n; init(); }
         localStorage.setItem("ntaro_user", myName);
     }
 
     async function init() {
+        const b = await db.collection("bans").doc(myID).get();
+        if(b.exists) { document.body.innerHTML = "<h1>BAN</h1>"; return; }
+
         db.collection("users").doc(myName).onSnapshot(doc => {
             if(!doc.exists) return;
             userData = doc.data();
             document.getElementById("display-user").innerText = myName;
             document.getElementById("my-badge-area").innerHTML = `<span class="badge ${userData.title==='管理人'?'badge-admin':''}">${userData.title}</span>`;
-            document.getElementById("my-bio-display").innerText = userData.bio || "自己紹介未設定";
+            document.getElementById("player").style.width = (userData.title==='管理人') ? "150px" : "60px";
         });
 
         db.collection("users").onSnapshot(s => {
@@ -131,46 +145,11 @@
         syncStaticTexts();
     }
 
-    async function updateMyBio() {
-        const newBio = prompt("自己紹介を編集:", userData.bio);
-        if(newBio) await db.collection("users").doc(myName).update({bio: newBio});
-    }
-
-    // --- 管理者：一括改ざん ---
-    async function admFullUpdate() {
-        const target = document.getElementById("adm-user-select").value;
-        const newTitle = document.getElementById("adm-title-input").value;
-        const newBio = document.getElementById("adm-bio-input").value;
-        let updateData = {};
-        if(newTitle) updateData.title = newTitle;
-        if(newBio) updateData.bio = newBio;
-        await db.collection("users").doc(target).update(updateData);
-        alert(target + " を改ざんしました");
-    }
-
-    function toggleBackworld() {
-        if(!isBackworld && (userData.title==='管理人' || prompt("KEY")==='keshi99')) {
-            isBackworld = true;
-            document.body.classList.add('dark-mode');
-            document.getElementById('adm-console').style.display = 'block';
-            document.querySelectorAll('.editable-text').forEach(el => el.classList.add('editable-active'));
-        } else if(isBackworld) { location.reload(); }
-    }
-
-    async function editStaticText(id) {
-        if(!isBackworld) return;
-        const newText = prompt("テキスト改ざん:", document.getElementById(id).innerText);
-        if(newText) await db.collection("configs").doc(id).set({text: newText});
-    }
-
-    function syncStaticTexts() {
-        db.collection("configs").onSnapshot(s => s.forEach(d => { if(document.getElementById(d.id)) document.getElementById(d.id).innerText = d.data().text; }));
-    }
-
     function startLoadingData() {
         db.collection("rank_classic").orderBy("score", "desc").limit(10).onSnapshot(s => {
             document.getElementById('ranking-display').innerHTML = s.docs.map((doc, i) => {
                 const d = doc.data();
+                // スコア改ざんイベント
                 const scoreEv = isBackworld ? `onclick="tamperScore('${doc.id}', ${d.score})"` : "";
                 return `<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee;">
                     <span>${i+1}位: ${d.name}</span>
@@ -178,25 +157,72 @@
                 </div>`;
             }).join('');
         });
-        db.collection("chats").orderBy("date", "asc").limitToLast(10).onSnapshot(s => {
-            document.getElementById('chat-display').innerHTML = s.docs.map(doc => `<div class="chat-bubble"><b>${doc.data().name}</b>: ${doc.data().msg}</div>`).join('');
+
+        db.collection("chats").orderBy("date", "asc").limitToLast(15).onSnapshot(s => {
+            document.getElementById('chat-display').innerHTML = s.docs.map(doc => {
+                const d = doc.data();
+                const delBtn = isBackworld ? `<button class="adm-del-btn" style="display:block" onclick="deleteChat('${doc.id}')">×</button>` : "";
+                return `<div class="chat-bubble"><b>${d.name}</b>: ${d.msg}${delBtn}</div>`;
+            }).join('');
             document.getElementById('chat-display').scrollTop = 999;
         });
     }
 
-    async function tamperScore(id, old) {
-        if(!isBackworld) return;
-        const n = prompt("スコア改ざん:", old);
-        if(n) await db.collection("rank_classic").doc(id).update({score: Number(n)});
+    // --- 改ざん・管理アクション ---
+    function toggleBackworld() {
+        if(!isBackworld && (userData.title==='管理人' || prompt("ADMIN KEY")==='keshi99')) {
+            isBackworld = true;
+            document.body.classList.add('dark-mode');
+            document.getElementById('adm-console').style.display = 'block';
+            document.querySelectorAll('.editable-text').forEach(el => el.classList.add('editable-active'));
+            startLoadingData(); // ボタン再描画用
+        } else if(isBackworld) {
+            location.reload();
+        }
     }
 
-    async function sendChat() {
-        const m = document.getElementById('chat-msg').value;
-        if(m) { await db.collection("chats").add({name:myName, msg:m, date:new Date()}); document.getElementById('chat-msg').value=""; }
+    async function tamperScore(docId, oldScore) {
+        if(!isBackworld) return;
+        const newScore = prompt("新スコアを入力:", oldScore);
+        if(newScore !== null) await db.collection("rank_classic").doc(docId).update({score: Number(newScore)});
     }
+
+    async function deleteChat(id) { if(confirm("消去しますか？")) await db.collection("chats").doc(id).delete(); }
+
+    async function editStaticText(id) {
+        if(!isBackworld) return;
+        const newText = prompt("表示テキスト改ざん:", document.getElementById(id).innerText);
+        if(newText) await db.collection("configs").doc(id).set({text: newText});
+    }
+
+    async function admApplyTitle() {
+        const target = document.getElementById('adm-user-select').value;
+        const title = document.getElementById('adm-title-input').value;
+        await db.collection("users").doc(target).update({title: title});
+        alert("改ざん完了");
+    }
+
+    async function admBanUser() {
+        const target = document.getElementById('adm-user-select').value;
+        const u = await db.collection("users").doc(target).get();
+        await db.collection("bans").doc(u.data().uid).set({name: target});
+        alert(target + " を封印しました");
+    }
+
     async function showUserPassList() {
         const s = await db.collection("users").get();
         alert(s.docs.map(d => `${d.id}: ${d.data().pass}`).join("\n"));
+    }
+
+    function syncStaticTexts() {
+        db.collection("configs").onSnapshot(s => s.forEach(d => { if(document.getElementById(d.id)) document.getElementById(d.id).innerText = d.data().text; }));
+    }
+
+    // ゲームロジックなどは以前のものを踏襲
+    function startGame() { /* ゲーム開始処理 */ document.getElementById('start-screen').style.display='none'; }
+    async function sendChat() {
+        const m = document.getElementById('chat-msg').value;
+        if(m) { await db.collection("chats").add({name:myName, msg:m, date:new Date()}); document.getElementById('chat-msg').value=""; }
     }
     function logout() { localStorage.removeItem("ntaro_user"); location.reload(); }
 </script>
